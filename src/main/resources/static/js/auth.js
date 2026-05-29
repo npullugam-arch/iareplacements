@@ -76,6 +76,54 @@
         }
     }
 
+    function setVisualState(type, message) {
+        const cardContainer = document.getElementById("cardContainer");
+        const rollInput = document.getElementById("studentUsername");
+        const passwordInput = document.getElementById("studentPassword");
+        const loginBtn = document.getElementById("loginBtn");
+
+        if (!cardContainer || !rollInput || !passwordInput || !loginBtn) {
+            return;
+        }
+
+        cardContainer.classList.remove("shake", "success-card");
+        rollInput.classList.remove("error-input", "success-input");
+        passwordInput.classList.remove("error-input", "success-input");
+        loginBtn.classList.remove("btn-loading", "btn-error", "btn-success");
+
+        void cardContainer.offsetWidth;
+
+        if (type === "loading") {
+            loginBtn.textContent = message || "Authenticating...";
+            loginBtn.classList.add("btn-loading");
+            loginBtn.disabled = true;
+            return;
+        }
+
+        if (type === "error") {
+            cardContainer.classList.add("shake");
+            rollInput.classList.add("error-input");
+            passwordInput.classList.add("error-input");
+            loginBtn.classList.add("btn-error");
+            loginBtn.textContent = message || "Access Denied";
+            loginBtn.disabled = false;
+            return;
+        }
+
+        if (type === "success") {
+            cardContainer.classList.add("success-card");
+            rollInput.classList.add("success-input");
+            passwordInput.classList.add("success-input");
+            loginBtn.classList.add("btn-success");
+            loginBtn.textContent = message || "Approved ✓";
+            loginBtn.disabled = true;
+            return;
+        }
+
+        loginBtn.textContent = "Authenticate";
+        loginBtn.disabled = false;
+    }
+
     function setupAdminLogin(formId, errorId) {
         const form = document.getElementById(formId);
         if (!form) {
@@ -129,19 +177,21 @@
         form.addEventListener("submit", async function (event) {
             event.preventDefault();
 
-            const submitButton = form.querySelector("button[type='submit']");
             const rollNo = form.elements.username.value.trim();
             const password = form.elements.password.value.trim();
 
             if (!rollNo || !password) {
-                setError(errorElement, "Roll No and DOB password are required.");
+                setError(errorElement, "User ID and password are required.");
+                setVisualState("error", "Required fields missing");
+                setTimeout(function () {
+                    setVisualState("normal");
+                }, 1800);
                 return;
             }
 
             try {
                 setError(errorElement, "");
-                submitButton.disabled = true;
-                submitButton.textContent = "Signing In...";
+                setVisualState("loading", "Authenticating...");
 
                 const result = await postJson(CREDENTIALS.student.apiLoginUrl, {
                     rollNo: rollNo,
@@ -151,6 +201,10 @@
                 if (!result || !result.success) {
                     clearAuthState();
                     setError(errorElement, result && result.message ? result.message : "Invalid roll number or password.");
+                    setVisualState("error", "Access Denied");
+                    setTimeout(function () {
+                        setVisualState("normal");
+                    }, 2000);
                     return;
                 }
 
@@ -166,13 +220,17 @@
                     photoUrl: result.photoUrl
                 });
 
-                window.location.assign(CREDENTIALS.student.redirectUrl);
+                setVisualState("success", "Approved ✓");
+                setTimeout(function () {
+                    window.location.assign(CREDENTIALS.student.redirectUrl);
+                }, 700);
             } catch (error) {
                 clearAuthState();
                 setError(errorElement, error.message || "Unable to login right now.");
-            } finally {
-                submitButton.disabled = false;
-                submitButton.textContent = "Login as Student";
+                setVisualState("error", "Access Denied");
+                setTimeout(function () {
+                    setVisualState("normal");
+                }, 2000);
             }
         });
     }

@@ -176,13 +176,32 @@
 
         const errorList = document.getElementById("studentUploadErrors");
         errorList.innerHTML = "";
-        (summary.errors || []).forEach(function (error) {
+        const errors = summary.errors || [];
+        errors.slice(0, 20).forEach(function (error) {
             const item = document.createElement("li");
             item.textContent = error;
             errorList.appendChild(item);
         });
 
+        if (errors.length > 20) {
+            const item = document.createElement("li");
+            item.textContent = "View more errors in backend logs. Showing first 20 of " + errors.length + ".";
+            errorList.appendChild(item);
+        }
+
         document.getElementById("studentUploadSummary").classList.remove("hidden");
+    }
+
+    function buildUploadErrorMessage(payload) {
+        if (!payload) {
+            return "Unable to upload student Excel.";
+        }
+
+        if (payload.message && payload.error) {
+            return payload.message + ": " + payload.error;
+        }
+
+        return payload.message || payload.error || "Unable to upload student Excel.";
     }
 
     function setupUpload() {
@@ -219,7 +238,7 @@
 
                 const payload = await response.json().catch(function () { return null; });
                 if (!response.ok) {
-                    throw new Error(payload && payload.message ? payload.message : "Unable to upload student Excel.");
+                    throw new Error(buildUploadErrorMessage(payload));
                 }
 
                 setUploadSummary(payload);

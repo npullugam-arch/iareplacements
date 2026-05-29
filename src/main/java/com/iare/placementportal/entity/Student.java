@@ -61,10 +61,18 @@ public class Student {
     private String permanentAddress;
 
     private String aadhar;
+
+    @Column(length = 1000)
     private String fatherOccupation;
+
+    @Column(length = 1000)
     private String occupationType;
+
+    @Column(length = 1000)
     private String income;
     private String section;
+
+    @Column(length = 1000)
     private String moles;
     private String placeOfBirth;
     private String currentDno;

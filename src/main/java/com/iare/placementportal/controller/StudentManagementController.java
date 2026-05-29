@@ -6,6 +6,7 @@ import com.iare.placementportal.dto.StudentLoginResponse;
 import com.iare.placementportal.dto.StudentResponse;
 import com.iare.placementportal.service.StudentService;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -30,7 +31,7 @@ public class StudentManagementController {
         this.studentService = studentService;
     }
 
-    @PostMapping("/api/admin/students/upload-excel")
+    @PostMapping(value = "/api/admin/students/upload-excel", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @ResponseStatus(HttpStatus.CREATED)
     public StudentExcelUploadResponse uploadStudents(@RequestParam("file") MultipartFile file) {
         return studentService.uploadStudentsFromExcel(file);

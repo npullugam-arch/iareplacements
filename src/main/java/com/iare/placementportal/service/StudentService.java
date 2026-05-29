@@ -14,23 +14,28 @@ import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.usermodel.WorkbookFactory;
+import org.apache.poi.EncryptedDocumentException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -47,17 +52,44 @@ public class StudentService {
     private static final DataFormatter DATA_FORMATTER = new DataFormatter();
     private static final DateTimeFormatter DISPLAY_DATE_FORMAT = DateTimeFormatter.ofPattern("dd-MM-yyyy");
     private static final DateTimeFormatter PASSWORD_DATE_FORMAT = DateTimeFormatter.ofPattern("ddMMyyyy");
+    private static final List<DateTimeFormatter> DOB_FORMATTERS = List.of(
+            DateTimeFormatter.ofPattern("dd-MM-yyyy"),
+            DateTimeFormatter.ofPattern("d-M-yyyy"),
+            DateTimeFormatter.ofPattern("dd/MM/yyyy"),
+            DateTimeFormatter.ofPattern("d/M/yyyy"),
+            DateTimeFormatter.ofPattern("dd.MM.yyyy"),
+            DateTimeFormatter.ofPattern("d.M.yyyy"),
+            DateTimeFormatter.ofPattern("yyyy-MM-dd"),
+            DateTimeFormatter.ofPattern("ddMMyyyy"),
+            DateTimeFormatter.ofPattern("MM/dd/yyyy"),
+            DateTimeFormatter.ofPattern("M/d/yyyy"),
+            DateTimeFormatter.ofPattern("dd-MMM-yyyy", Locale.ENGLISH),
+            DateTimeFormatter.ofPattern("d-MMM-yyyy", Locale.ENGLISH)
+    );
     private static final String PHOTO_URL_TEMPLATE =
             "https://iare-data.s3.ap-south-1.amazonaws.com/uploads/STUDENTS/%s/%s.jpg";
+    private static final String[] ROLL_NO_HEADERS = {"roll no", "rollno", "roll number"};
+    private static final String[] STUDENT_NAME_HEADERS = {"student name", "name of the student", "studentname", "name"};
+    private static final String[] DOB_HEADERS = {"dob", "d.o.b", "date of birth", "dateofbirth"};
+    private static final String[] BRANCH_HEADERS = {"branch", "dept", "department"};
+    private static final String[] SEMESTER_HEADERS = {"semester", "sem"};
+    private static final String[] SECTION_HEADERS = {"section", "sec"};
+    private static final String[] GENDER_HEADERS = {"gender", "sex"};
 
     private final StudentRepository studentRepository;
+    private final TransactionTemplate requiresNewTransactionTemplate;
 
-    public StudentService(StudentRepository studentRepository) {
+    public StudentService(StudentRepository studentRepository, PlatformTransactionManager transactionManager) {
         this.studentRepository = studentRepository;
+        this.requiresNewTransactionTemplate = new TransactionTemplate(transactionManager);
+        this.requiresNewTransactionTemplate.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
     }
 
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
     public StudentExcelUploadResponse uploadStudentsFromExcel(MultipartFile file) {
         validateExcelFile(file);
+        LOGGER.info("Student Excel upload started: fileName='{}', size={} bytes",
+                file.getOriginalFilename(), file.getSize());
 
         List<String> errors = new ArrayList<>();
         int totalRows = 0;
@@ -78,8 +110,12 @@ public class StudentService {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                         "Unable to detect Excel header row. Ensure the sheet contains Roll No and Student Name headers.");
             }
+            LOGGER.info("Student Excel header row detected at sheet row {}.", headerRowIndex + 1);
 
             Map<String, Integer> headerIndexMap = buildHeaderIndexMap(sheet.getRow(headerRowIndex));
+            LOGGER.info("Student Excel detected columns: {}", headerIndexMap);
+            logRequiredHeaderMappings(headerIndexMap);
+            validateRequiredHeaders(headerIndexMap);
 
             for (int rowIndex = headerRowIndex + 1; rowIndex <= sheet.getLastRowNum(); rowIndex++) {
                 Row row = sheet.getRow(rowIndex);
@@ -91,12 +127,8 @@ public class StudentService {
 
                 try {
                     StudentRowData rowData = readStudentRow(row, headerIndexMap);
-                    Student student = studentRepository.findByRollNoIgnoreCase(rowData.rollNo())
-                            .orElseGet(Student::new);
-                    boolean existing = student.getId() != null;
-
-                    mapStudent(student, rowData);
-                    studentRepository.save(student);
+                    logSampleRow(rowIndex + 1, totalRows, rowData);
+                    boolean existing = persistStudentRow(rowData);
 
                     if (existing) {
                         updatedCount++;
@@ -108,14 +140,28 @@ public class StudentService {
                     errors.add("Row " + (rowIndex + 1) + ": " + exception.getMessage());
                 } catch (RuntimeException exception) {
                     skippedCount++;
-                    errors.add("Row " + (rowIndex + 1) + ": Unable to process student record.");
-                    LOGGER.warn("Failed to process student Excel row {}.", rowIndex + 1, exception);
+                    String reason = buildRowErrorMessage(exception);
+                    errors.add("Row " + (rowIndex + 1) + ": " + reason);
+                    LOGGER.error("Failed to process row {}: {}", rowIndex + 1, exception.getMessage(), exception);
                 }
             }
+        } catch (EncryptedDocumentException exception) {
+            LOGGER.warn("Uploaded student Excel file is invalid or unsupported.", exception);
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Unable to read this Excel file. Please upload a valid .xlsx or .xls student sheet.");
         } catch (IOException exception) {
             LOGGER.error("Failed to read uploaded student Excel file.", exception);
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Unable to read uploaded Excel file.");
+        } catch (ResponseStatusException exception) {
+            throw exception;
+        } catch (Exception exception) {
+            LOGGER.error("Unexpected failure while uploading student Excel file.", exception);
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
+                    "Unable to process uploaded Excel file. Please verify the sheet format and try again.");
         }
+
+        LOGGER.info("Student Excel upload completed: totalRows={}, insertedCount={}, updatedCount={}, skippedCount={}, sampleErrors={}",
+                totalRows, insertedCount, updatedCount, skippedCount, errors.stream().limit(5).toList());
 
         return new StudentExcelUploadResponse(totalRows, insertedCount, updatedCount, skippedCount, errors);
     }
@@ -201,7 +247,8 @@ public class StudentService {
     }
 
     private int detectHeaderRowIndex(Sheet sheet) {
-        for (int rowIndex = sheet.getFirstRowNum(); rowIndex <= sheet.getLastRowNum(); rowIndex++) {
+        int lastRowIndexToCheck = Math.min(sheet.getLastRowNum(), sheet.getFirstRowNum() + 9);
+        for (int rowIndex = sheet.getFirstRowNum(); rowIndex <= lastRowIndexToCheck; rowIndex++) {
             Row row = sheet.getRow(rowIndex);
             if (row == null) {
                 continue;
@@ -211,10 +258,10 @@ public class StudentService {
             boolean hasStudentName = false;
             for (Cell cell : row) {
                 String normalizedValue = normalizeHeader(DATA_FORMATTER.formatCellValue(cell));
-                if ("roll no".equals(normalizedValue)) {
+                if (matchesHeader(normalizedValue, ROLL_NO_HEADERS)) {
                     hasRollNo = true;
                 }
-                if ("student name".equals(normalizedValue)) {
+                if (matchesHeader(normalizedValue, STUDENT_NAME_HEADERS)) {
                     hasStudentName = true;
                 }
             }
@@ -238,77 +285,82 @@ public class StudentService {
     }
 
     private StudentRowData readStudentRow(Row row, Map<String, Integer> headerIndexMap) {
-        String rollNo = normalizeOptional(readString(row, headerIndexMap, "roll no"));
+        String rollNo = normalizeOptional(readString(row, headerIndexMap, ROLL_NO_HEADERS));
         if (isBlank(rollNo)) {
             throw new RowValidationException("Roll No is required.");
         }
 
-        String studentName = normalizeOptional(readString(row, headerIndexMap, "student name"));
+        String studentName = normalizeOptional(readString(row, headerIndexMap, STUDENT_NAME_HEADERS));
         if (isBlank(studentName)) {
             throw new RowValidationException("Student Name is required.");
         }
 
-        ParsedDate dob = parseDateCell(row, headerIndexMap, "dob");
+        ParsedDate dob = parseDateCell(row, headerIndexMap, DOB_HEADERS);
         if (dob == null) {
-            throw new RowValidationException("DOB is required and must be a valid date.");
+            String dobValue = normalizeOptional(readString(row, headerIndexMap, DOB_HEADERS));
+            if (dobValue == null) {
+                dob = ParsedDate.withFallbackPassword(rollNo);
+            } else {
+                throw new RowValidationException("Invalid DOB value '" + dobValue + "'.");
+            }
         }
 
-        ParsedDate doj = parseDateCell(row, headerIndexMap, "doj");
+        ParsedDate doj = parseDateCell(row, headerIndexMap, "doj", "date of joining");
 
         return new StudentRowData(
                 rollNo.toUpperCase(Locale.ENGLISH),
                 dob.passwordValue(),
                 studentName,
-                normalizeOptional(readString(row, headerIndexMap, "gender")),
+                normalizeOptional(readString(row, headerIndexMap, GENDER_HEADERS)),
                 normalizeOptional(readString(row, headerIndexMap, "status")),
-                normalizeOptional(readString(row, headerIndexMap, "cast")),
-                normalizeOptional(readString(row, headerIndexMap, "sub cast")),
+                normalizeOptional(readString(row, headerIndexMap, "cast", "caste")),
+                normalizeOptional(readString(row, headerIndexMap, "sub cast", "sub caste")),
                 normalizeOptional(readString(row, headerIndexMap, "religion")),
-                normalizeOptional(readString(row, headerIndexMap, "branch")),
-                parseInteger(readString(row, headerIndexMap, "semester")),
+                normalizeOptional(readString(row, headerIndexMap, BRANCH_HEADERS)),
+                parseSemester(readString(row, headerIndexMap, SEMESTER_HEADERS)),
                 normalizeOptional(readString(row, headerIndexMap, "admission category")),
                 normalizeOptional(readString(row, headerIndexMap, "fee category")),
                 normalizeOptional(readString(row, headerIndexMap, "cet rank")),
                 normalizeOptional(readString(row, headerIndexMap, "ssc marks")),
-                normalizeOptional(readString(row, headerIndexMap, "ssc")),
+                normalizeOptional(readString(row, headerIndexMap, "ssc", "ssc percentage", "ssc %")),
                 normalizeOptional(readString(row, headerIndexMap, "inter marks")),
-                normalizeOptional(readString(row, headerIndexMap, "inter")),
+                normalizeOptional(readString(row, headerIndexMap, "inter", "inter percentage", "inter %")),
                 normalizeOptional(readString(row, headerIndexMap, "ug marks")),
-                normalizeOptional(readString(row, headerIndexMap, "ug")),
+                normalizeOptional(readString(row, headerIndexMap, "ug", "ug percentage", "ug %")),
                 dob.displayValue(),
                 doj == null ? null : doj.displayValue(),
                 normalizeOptional(readString(row, headerIndexMap, "father name")),
                 normalizeOptional(readString(row, headerIndexMap, "mother name")),
                 normalizeOptional(readString(row, headerIndexMap, "student phone")),
                 firstNonBlank(
-                        normalizeOptional(readString(row, headerIndexMap, "parent phone")),
+                        normalizeOptional(readString(row, headerIndexMap, "parent phone", "father phone", "parent mobile")),
                         normalizeOptional(readString(row, headerIndexMap, "father phone"))
                 ),
                 normalizeOptional(readString(row, headerIndexMap, "mother phone")),
-                normalizeOptional(readString(row, headerIndexMap, "student email id")),
+                normalizeOptional(readString(row, headerIndexMap, "student email id", "student email", "email")),
                 normalizeOptional(readString(row, headerIndexMap, "current address")),
                 normalizeOptional(readString(row, headerIndexMap, "permanent address")),
-                normalizeOptional(readString(row, headerIndexMap, "aadhar")),
+                normalizeOptional(readString(row, headerIndexMap, "aadhar", "aadhaar")),
                 normalizeOptional(readString(row, headerIndexMap, "father occupation")),
                 normalizeOptional(readString(row, headerIndexMap, "occupation type")),
                 normalizeOptional(readString(row, headerIndexMap, "income")),
-                normalizeOptional(readString(row, headerIndexMap, "section")),
+                normalizeOptional(readString(row, headerIndexMap, SECTION_HEADERS)),
                 normalizeOptional(readString(row, headerIndexMap, "moles")),
-                normalizeOptional(readString(row, headerIndexMap, "place of birth")),
-                normalizeOptional(readString(row, headerIndexMap, "current dno")),
+                normalizeOptional(readString(row, headerIndexMap, "place of birth", "place_of_birth")),
+                normalizeOptional(readString(row, headerIndexMap, "current dno", "current_dno")),
                 normalizeOptional(readString(row, headerIndexMap, "current street")),
-                normalizeOptional(readString(row, headerIndexMap, "current village town")),
-                normalizeOptional(readString(row, headerIndexMap, "current mandal")),
-                normalizeOptional(readString(row, headerIndexMap, "current district")),
-                normalizeOptional(readString(row, headerIndexMap, "current state")),
-                normalizeOptional(readString(row, headerIndexMap, "current pincode")),
-                normalizeOptional(readString(row, headerIndexMap, "permanent dno")),
+                normalizeOptional(readString(row, headerIndexMap, "current village town", "current_village_town")),
+                normalizeOptional(readString(row, headerIndexMap, "current mandal", "current_mandal")),
+                normalizeOptional(readString(row, headerIndexMap, "current district", "current_district")),
+                normalizeOptional(readString(row, headerIndexMap, "current state", "current_state")),
+                normalizeOptional(readString(row, headerIndexMap, "current pincode", "current_pincode")),
+                normalizeOptional(readString(row, headerIndexMap, "permanent dno", "permanent_dno")),
                 normalizeOptional(readString(row, headerIndexMap, "permanent street")),
-                normalizeOptional(readString(row, headerIndexMap, "permanent village town")),
-                normalizeOptional(readString(row, headerIndexMap, "permanent mandal")),
-                normalizeOptional(readString(row, headerIndexMap, "permanent district")),
-                normalizeOptional(readString(row, headerIndexMap, "permanent state")),
-                normalizeOptional(readString(row, headerIndexMap, "permanent pincode")),
+                normalizeOptional(readString(row, headerIndexMap, "permanent village town", "permanent_village_town")),
+                normalizeOptional(readString(row, headerIndexMap, "permanent mandal", "permanent_mandal")),
+                normalizeOptional(readString(row, headerIndexMap, "permanent district", "permanent_district")),
+                normalizeOptional(readString(row, headerIndexMap, "permanent state", "permanent_state")),
+                normalizeOptional(readString(row, headerIndexMap, "permanent pincode", "permanent_pincode")),
                 normalizeOptional(readString(row, headerIndexMap, "domicile state")),
                 normalizeOptional(readString(row, headerIndexMap, "ssc state")),
                 normalizeOptional(readString(row, headerIndexMap, "inter state"))
@@ -456,55 +508,47 @@ public class StudentService {
         return true;
     }
 
-    private String readString(Row row, Map<String, Integer> headerIndexMap, String headerAlias) {
-        Integer cellIndex = findHeaderIndex(headerIndexMap, headerAlias);
+    private String readString(Row row, Map<String, Integer> headerIndexMap, String... headerAliases) {
+        Integer cellIndex = findHeaderIndex(headerIndexMap, headerAliases);
         if (cellIndex == null) {
             return null;
         }
-        Cell cell = row.getCell(cellIndex);
-        if (cell == null) {
-            return null;
+        return readCellAsString(row, cellIndex);
+    }
+
+    private Integer findHeaderIndex(Map<String, Integer> headerIndexMap, String... headerAliases) {
+        for (String headerAlias : headerAliases) {
+            Integer directMatch = headerIndexMap.get(normalizeHeader(headerAlias));
+            if (directMatch != null) {
+                return directMatch;
+            }
         }
-        return DATA_FORMATTER.formatCellValue(cell).trim();
+        return null;
     }
 
-    private Integer findHeaderIndex(Map<String, Integer> headerIndexMap, String headerAlias) {
-        return headerIndexMap.get(normalizeHeader(headerAlias));
-    }
-
-    private ParsedDate parseDateCell(Row row, Map<String, Integer> headerIndexMap, String headerAlias) {
-        Integer cellIndex = findHeaderIndex(headerIndexMap, headerAlias);
+    private ParsedDate parseDateCell(Row row, Map<String, Integer> headerIndexMap, String... headerAliases) {
+        Integer cellIndex = findHeaderIndex(headerIndexMap, headerAliases);
         if (cellIndex == null) {
             return null;
         }
 
-        Cell cell = row.getCell(cellIndex);
+        Cell cell = row.getCell(cellIndex, Row.MissingCellPolicy.RETURN_BLANK_AS_NULL);
         if (cell == null) {
             return null;
         }
 
-        if (DateUtil.isCellDateFormatted(cell)) {
-            LocalDate localDate = Instant.ofEpochMilli(cell.getDateCellValue().getTime())
-                    .atZone(ZoneId.systemDefault())
-                    .toLocalDate();
+        if (isExcelDateCell(cell)) {
+            LocalDate localDate = cell.getLocalDateTimeCellValue().toLocalDate();
             return new ParsedDate(localDate.format(DISPLAY_DATE_FORMAT), localDate.format(PASSWORD_DATE_FORMAT));
         }
 
-        String cellValue = DATA_FORMATTER.formatCellValue(cell).trim();
+        String cellValue = readCellAsString(row, cellIndex);
         if (cellValue.isEmpty()) {
             return null;
         }
 
-        String normalized = cellValue.replace('.', '-').replace('/', '-');
-        for (DateTimeFormatter formatter : List.of(
-                DateTimeFormatter.ofPattern("dd-MM-yyyy"),
-                DateTimeFormatter.ofPattern("d-M-yyyy"),
-                DateTimeFormatter.ofPattern("dd-M-yyyy"),
-                DateTimeFormatter.ofPattern("d-MM-yyyy"),
-                DateTimeFormatter.ofPattern("yyyy-MM-dd"),
-                DateTimeFormatter.ofPattern("dd-MMM-yyyy", Locale.ENGLISH),
-                DateTimeFormatter.ofPattern("d-MMM-yyyy", Locale.ENGLISH)
-        )) {
+        String normalized = cellValue.trim();
+        for (DateTimeFormatter formatter : DOB_FORMATTERS) {
             try {
                 LocalDate parsedDate = LocalDate.parse(normalized, formatter);
                 return new ParsedDate(parsedDate.format(DISPLAY_DATE_FORMAT), parsedDate.format(PASSWORD_DATE_FORMAT));
@@ -513,6 +557,37 @@ public class StudentService {
         }
 
         return null;
+    }
+
+    private String readCellAsString(Row row, Integer index) {
+        if (row == null || index == null || index < 0) {
+            return "";
+        }
+
+        Cell cell = row.getCell(index, Row.MissingCellPolicy.RETURN_BLANK_AS_NULL);
+        if (cell == null) {
+            return "";
+        }
+
+        if (isExcelDateCell(cell)) {
+            LocalDate localDate = cell.getLocalDateTimeCellValue().toLocalDate();
+            return localDate.format(DISPLAY_DATE_FORMAT);
+        }
+
+        return DATA_FORMATTER.formatCellValue(cell).trim();
+    }
+
+    private boolean isExcelDateCell(Cell cell) {
+        if (cell == null) {
+            return false;
+        }
+
+        CellType cellType = cell.getCellType();
+        if (cellType == CellType.FORMULA) {
+            cellType = cell.getCachedFormulaResultType();
+        }
+
+        return cellType == CellType.NUMERIC && DateUtil.isCellDateFormatted(cell);
     }
 
     private Integer parseInteger(String value) {
@@ -531,15 +606,45 @@ public class StudentService {
         }
     }
 
+    private Integer parseSemester(String value) {
+        String normalizedValue = normalizeOptional(value);
+        if (normalizedValue == null) {
+            return null;
+        }
+
+        String digits = normalizedValue.replaceAll("[^0-9]", "");
+        if (!digits.isEmpty()) {
+            try {
+                return Integer.parseInt(digits);
+            } catch (NumberFormatException exception) {
+                return null;
+            }
+        }
+
+        return switch (normalizedValue.toUpperCase(Locale.ENGLISH)) {
+            case "I" -> 1;
+            case "II" -> 2;
+            case "III" -> 3;
+            case "IV" -> 4;
+            case "V" -> 5;
+            case "VI" -> 6;
+            case "VII" -> 7;
+            case "VIII" -> 8;
+            default -> null;
+        };
+    }
+
     private String buildPhotoUrl(String rollNo) {
         return String.format(PHOTO_URL_TEMPLATE, rollNo, rollNo);
     }
 
     private String normalizeHeader(String value) {
         return value == null ? "" : value.toLowerCase(Locale.ENGLISH)
-                .replaceAll("[^a-z0-9]+", " ")
-                .trim()
-                .replaceAll("\\s+", " ");
+                .replace(".", "")
+                .replace("_", "")
+                .replace("-", "")
+                .replace(" ", "")
+                .trim();
     }
 
     private String normalizeOptional(String value) {
@@ -558,7 +663,101 @@ public class StudentService {
         return !isBlank(first) ? first : second;
     }
 
+    private boolean persistStudentRow(StudentRowData rowData) {
+        Boolean existing = requiresNewTransactionTemplate.execute(status -> {
+            Student student = studentRepository.findByRollNoIgnoreCase(rowData.rollNo())
+                    .orElseGet(Student::new);
+            boolean studentExists = student.getId() != null;
+            mapStudent(student, rowData);
+            studentRepository.saveAndFlush(student);
+            return studentExists;
+        });
+        return Boolean.TRUE.equals(existing);
+    }
+
+    private void validateRequiredHeaders(Map<String, Integer> headerIndexMap) {
+        if (findHeaderIndex(headerIndexMap, ROLL_NO_HEADERS) == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Header not mapped: Roll No");
+        }
+        if (findHeaderIndex(headerIndexMap, STUDENT_NAME_HEADERS) == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Header not mapped: Student Name");
+        }
+        if (findHeaderIndex(headerIndexMap, DOB_HEADERS) == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Header not mapped: DOB");
+        }
+    }
+
+    private void logRequiredHeaderMappings(Map<String, Integer> headerIndexMap) {
+        Map<String, Integer> requiredMappings = new LinkedHashMap<>();
+        requiredMappings.put("Roll No", findHeaderIndex(headerIndexMap, ROLL_NO_HEADERS));
+        requiredMappings.put("Student Name", findHeaderIndex(headerIndexMap, STUDENT_NAME_HEADERS));
+        requiredMappings.put("DOB", findHeaderIndex(headerIndexMap, DOB_HEADERS));
+        requiredMappings.put("Branch", findHeaderIndex(headerIndexMap, BRANCH_HEADERS));
+        requiredMappings.put("Semester", findHeaderIndex(headerIndexMap, SEMESTER_HEADERS));
+        requiredMappings.put("Section", findHeaderIndex(headerIndexMap, SECTION_HEADERS));
+        requiredMappings.put("Gender", findHeaderIndex(headerIndexMap, GENDER_HEADERS));
+        LOGGER.info("Student Excel mapped key columns: {}", requiredMappings);
+    }
+
+    private void logSampleRow(int sheetRowNumber, int processedCount, StudentRowData rowData) {
+        if (processedCount > 5) {
+            return;
+        }
+        LOGGER.info("Sample student row {} => rollNo='{}', studentName='{}', dob='{}', generatedPassword='{}', branch='{}', semester='{}', section='{}'",
+                sheetRowNumber,
+                rowData.rollNo(),
+                rowData.studentName(),
+                rowData.dob(),
+                maskPassword(rowData.password()),
+                rowData.branch(),
+                rowData.semester(),
+                rowData.section());
+    }
+
+    private String maskPassword(String password) {
+        if (password == null || password.length() < 4) {
+            return "***";
+        }
+        return password.substring(0, 2) + "****" + password.substring(password.length() - 2);
+    }
+
+    private boolean matchesHeader(String normalizedValue, String... aliases) {
+        return Arrays.stream(aliases)
+                .map(this::normalizeHeader)
+                .anyMatch(alias -> alias.equals(normalizedValue));
+    }
+
+    private String buildRowErrorMessage(RuntimeException exception) {
+        Throwable cause = exception;
+        while (cause.getCause() != null && cause.getCause() != cause) {
+            cause = cause.getCause();
+        }
+
+        if (exception instanceof DataAccessException || cause instanceof DataAccessException) {
+            return "Database save failed: " + sanitizeExceptionMessage(cause.getMessage());
+        }
+
+        String message = sanitizeExceptionMessage(exception.getMessage());
+        if (message != null) {
+            return message;
+        }
+
+        String causeMessage = sanitizeExceptionMessage(cause.getMessage());
+        return causeMessage != null ? causeMessage : "Unable to process student record";
+    }
+
+    private String sanitizeExceptionMessage(String message) {
+        if (message == null) {
+            return null;
+        }
+        String singleLine = message.replaceAll("\\s+", " ").trim();
+        return singleLine.isEmpty() ? null : singleLine;
+    }
+
     private record ParsedDate(String displayValue, String passwordValue) {
+        private static ParsedDate withFallbackPassword(String rollNo) {
+            return new ParsedDate(null, rollNo);
+        }
     }
 
     private record StudentRowData(

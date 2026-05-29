@@ -27,7 +27,7 @@ public class GlobalExceptionHandler {
         }
 
         return ResponseEntity.badRequest()
-                .body(new ApiErrorResponse(message, LocalDateTime.now()));
+                .body(new ApiErrorResponse(message, null, LocalDateTime.now()));
     }
 
     @ExceptionHandler(ResponseStatusException.class)
@@ -35,13 +35,13 @@ public class GlobalExceptionHandler {
         HttpStatus status = HttpStatus.valueOf(exception.getStatusCode().value());
         LOGGER.warn("Handled application error: status={}, message={}", status.value(), exception.getReason());
         return ResponseEntity.status(status)
-                .body(new ApiErrorResponse(exception.getReason(), LocalDateTime.now()));
+                .body(new ApiErrorResponse(exception.getReason(), null, LocalDateTime.now()));
     }
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiErrorResponse> handleGenericException(Exception exception) {
         LOGGER.error("Unhandled server exception occurred.", exception);
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(new ApiErrorResponse("Something went wrong. Please try again.", LocalDateTime.now()));
+                .body(new ApiErrorResponse("Excel upload failed", exception.getMessage(), LocalDateTime.now()));
     }
 }

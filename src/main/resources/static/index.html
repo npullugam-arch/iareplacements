@@ -1,51 +1,756 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="IARE AI Placement Portal helping students prepare, track performance and succeed in placements.">
+    <meta name="theme-color" content="#0c0e14">
     <title>IARE AI Placement Portal</title>
-    <link rel="stylesheet" href="/css/style.css">
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <!-- Styles -->
+    <link rel="stylesheet" href="/css/index.css">
 </head>
-<body class="landing-body">
-<div class="background-orb orb-one"></div>
-<div class="background-orb orb-two"></div>
-<div class="background-grid"></div>
 
-<main class="landing-shell">
-    <header class="landing-header">
-        <div class="brand-chip">IARE AI Placement Portal</div>
-    </header>
+<body>
+    <!-- ===== NAVBAR ===== -->
+    <nav class="navbar">
+        <div class="navbar-container">
+            <div class="navbar-content glass">
+                <!-- Logo -->
+                <a href="#home" class="logo">
+                    <div class="logo-icon gradient-bg">
+                        <span style="color: var(--primary-foreground);">P</span>
+                    </div>
+                    <span class="logo-text">IARE AI Placement Portal</span>
+                </a>
 
-    <section class="hero-panel">
-        <div class="hero-copy">
-            <p class="eyebrow">AI-Powered Career Acceleration</p>
-            <h1>Prepare smarter, track opportunities, and manage placements in one portal.</h1>
-            <p class="hero-subtitle">
-                A modern placement experience for students and administrators with AI-ready workflows,
-                dashboards, and growth tools designed for college career success.
-            </p>
-            <div class="hero-actions">
-                <a class="primary-btn" href="/student">Student Login</a>
-                <a class="secondary-btn" href="/admin">Admin Login</a>
+                <!-- Desktop Navigation -->
+                <div class="nav-links">
+                    <a href="#home" class="nav-link">Home</a>
+                    <a href="#flow" class="nav-link">Flow</a>
+                    <a href="#features" class="nav-link">Features</a>
+                    <a href="#about" class="nav-link">About</a>
+                    <a href="#contact" class="nav-link">Contact</a>
+                </div>
+
+                <!-- Right Side -->
+                <div class="nav-right">
+                    <!-- Theme Toggle -->
+                    <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme">
+                        <svg id="sun-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="4"></circle>
+                            <path d="M12 2v2"></path>
+                            <path d="M12 20v2"></path>
+                            <path d="m4.93 4.93 1.41 1.41"></path>
+                            <path d="m17.66 17.66 1.41 1.41"></path>
+                            <path d="M2 12h2"></path>
+                            <path d="M20 12h2"></path>
+                            <path d="m6.34 17.66-1.41 1.41"></path>
+                            <path d="m19.07 4.93-1.41 1.41"></path>
+                        </svg>
+                        <svg id="moon-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none;">
+                            <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"></path>
+                        </svg>
+                    </button>
+
+                    <!-- Sign In Button -->
+                    <a href="/student" class="btn btn-primary signin-btn" data-home-login-trigger="true">Sign In</a>
+
+                    <!-- Mobile Menu Button -->
+                    <button class="mobile-menu-btn" id="mobile-menu-btn" aria-label="Toggle menu">
+                        <svg id="menu-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="4" x2="20" y1="12" y2="12"></line>
+                            <line x1="4" x2="20" y1="6" y2="6"></line>
+                            <line x1="4" x2="20" y1="18" y2="18"></line>
+                        </svg>
+                        <svg id="close-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none;">
+                            <path d="M18 6 6 18"></path>
+                            <path d="m6 6 12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Mobile Menu -->
+            <div class="mobile-menu glass" id="mobile-menu">
+                <a href="#home" class="mobile-nav-link">Home</a>
+                <a href="#flow" class="mobile-nav-link">Flow</a>
+                <a href="#features" class="mobile-nav-link">Features</a>
+                <a href="#about" class="mobile-nav-link">About</a>
+                <a href="#contact" class="mobile-nav-link">Contact</a>
+                <a href="/student" class="btn btn-primary mobile-signin-btn" data-home-login-trigger="true">Sign In</a>
             </div>
         </div>
+    </nav>
 
-        <div class="portal-options">
-            <a class="role-card student-card" href="/student">
-                <span class="role-badge">Student</span>
-                <h2>Access your preparation hub</h2>
-                <p>Resume analysis, mock interviews, placement drives, and a guided roadmap.</p>
-                <span class="role-link">Open Student Login</span>
-            </a>
+    <!-- ===== HERO SECTION ===== -->
+    <section id="home" class="hero">
+        <!-- Background Effects -->
+        <div class="hero-bg">
+            <div class="hero-gradient-1"></div>
+            <div class="hero-gradient-2"></div>
+        </div>
 
-            <a class="role-card admin-card" href="/admin">
-                <span class="role-badge">Admin</span>
-                <h2>Manage the placement ecosystem</h2>
-                <p>Track records, oversee students, coordinate companies, and monitor outcomes.</p>
-                <span class="role-link">Open Admin Login</span>
+        <!-- Content -->
+        <div class="hero-content">
+            <!-- Badge -->
+            <div class="hero-badge glass animate-fade-in-up animate-delay-2">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"></path>
+                    <path d="M5 3v4"></path>
+                    <path d="M19 17v4"></path>
+                    <path d="M3 5h4"></path>
+                    <path d="M17 19h4"></path>
+                </svg>
+                <span>AI-Powered Placement Platform</span>
+            </div>
+
+            <!-- Main Heading -->
+            <h1 class="hero-title animate-fade-in-up animate-delay-3">
+                <span>Your Placement Journey,</span><br>
+                <span class="hero-title-gradient">Smarter and Faster</span>
+                <span> with AI</span>
+            </h1>
+
+            <!-- Description -->
+            <p class="hero-description animate-fade-in-up animate-delay-4">
+                IARE AI Placement Portal helps students prepare, track performance and succeed in placements with AI-powered tools.
+            </p>
+
+            <!-- CTA Button -->
+            <a href="/student" class="btn btn-primary hero-cta animate-fade-in-up animate-delay-5" data-home-login-trigger="true">
+                Get Placed
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M5 12h14"></path>
+                    <path d="m12 5 7 7-7 7"></path>
+                </svg>
             </a>
         </div>
     </section>
-</main>
+
+    <!-- ===== STATS SECTION ===== -->
+    <section class="stats">
+        <div class="stats-grid">
+            <!-- Students -->
+            <div class="stat-card glass scroll-animate" data-delay="0">
+                <div class="stat-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="9" cy="7" r="4"></circle>
+                        <path d="M22 21v-2a4 4 0 0 0-3-3.87"></path>
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                    </svg>
+                </div>
+                <div class="stat-value" data-counter="5000" data-suffix="+">0</div>
+                <div class="stat-label">Students</div>
+            </div>
+
+            <!-- Companies -->
+            <div class="stat-card glass scroll-animate" data-delay="0.1">
+                <div class="stat-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"></path>
+                        <path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"></path>
+                        <path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"></path>
+                        <path d="M10 6h4"></path>
+                        <path d="M10 10h4"></path>
+                        <path d="M10 14h4"></path>
+                        <path d="M10 18h4"></path>
+                    </svg>
+                </div>
+                <div class="stat-value" data-counter="200" data-suffix="+">0</div>
+                <div class="stat-label">Top Companies</div>
+            </div>
+
+            <!-- Placement Rate -->
+            <div class="stat-card glass scroll-animate" data-delay="0.2">
+                <div class="stat-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="22 7 13.5 15.5 8.5 10.5 2 17"></polyline>
+                        <polyline points="16 7 22 7 22 13"></polyline>
+                    </svg>
+                </div>
+                <div class="stat-value" data-counter="95" data-suffix="%">0</div>
+                <div class="stat-label">Placement Rate</div>
+            </div>
+
+            <!-- Interviews -->
+            <div class="stat-card glass scroll-animate" data-delay="0.3">
+                <div class="stat-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"></path>
+                    </svg>
+                </div>
+                <div class="stat-value" data-counter="1000" data-suffix="+">0</div>
+                <div class="stat-label">Interviews Conducted</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== FLOW SECTION ===== -->
+    <section id="flow" class="flow">
+        <div class="flow-container">
+            <!-- Section Header -->
+            <div class="section-header scroll-animate">
+                <span class="section-label">How It Works</span>
+                <h2 class="section-title">
+                    Your Journey in <span class="gradient-text">5 Simple Steps</span>
+                </h2>
+            </div>
+
+            <!-- Flow Steps -->
+            <div class="flow-grid">
+                <div class="flow-line"></div>
+
+                <!-- Step 1 -->
+                <div class="flow-card glass scroll-animate" data-delay="0">
+                    <div class="flow-number gradient-bg">1</div>
+                    <div class="flow-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path>
+                            <polyline points="10 17 15 12 10 7"></polyline>
+                            <line x1="15" x2="3" y1="12" y2="12"></line>
+                        </svg>
+                    </div>
+                    <h3 class="flow-title">Student Login</h3>
+                    <p class="flow-description">Students securely login to access their placement dashboard.</p>
+                </div>
+
+                <!-- Step 2 -->
+                <div class="flow-card glass scroll-animate" data-delay="0.1">
+                    <div class="flow-number gradient-bg">2</div>
+                    <div class="flow-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M3 3v18h18"></path>
+                            <path d="m19 9-5 5-4-4-3 3"></path>
+                        </svg>
+                    </div>
+                    <h3 class="flow-title">Track Performance</h3>
+                    <p class="flow-description">Monitor coding, aptitude and interview performance.</p>
+                </div>
+
+                <!-- Step 3 -->
+                <div class="flow-card glass scroll-animate" data-delay="0.2">
+                    <div class="flow-number gradient-bg">3</div>
+                    <div class="flow-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"></path>
+                        </svg>
+                    </div>
+                    <h3 class="flow-title">Prepare for Interviews</h3>
+                    <p class="flow-description">Practice company-specific interview questions and mock interviews provided by admins.</p>
+                </div>
+
+                <!-- Step 4 -->
+                <div class="flow-card glass scroll-animate" data-delay="0.3">
+                    <div class="flow-number gradient-bg">4</div>
+                    <div class="flow-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"></path>
+                        </svg>
+                    </div>
+                    <h3 class="flow-title">Access Resources</h3>
+                    <p class="flow-description">Get placement materials, previous interview experiences and preparation resources.</p>
+                </div>
+
+                <!-- Step 5 -->
+                <div class="flow-card glass scroll-animate" data-delay="0.4">
+                    <div class="flow-number gradient-bg">5</div>
+                    <div class="flow-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="8" r="6"></circle>
+                            <path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"></path>
+                        </svg>
+                    </div>
+                    <h3 class="flow-title">Get Placed</h3>
+                    <p class="flow-description">Improve skills, crack interviews and achieve placement success.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== FEATURES SECTION ===== -->
+    <section id="features" class="features">
+        <div class="features-bg"></div>
+        <div class="features-container">
+            <!-- Section Header -->
+            <div class="section-header scroll-animate">
+                <span class="section-label">Features</span>
+                <h2 class="section-title">
+                    Powerful <span class="gradient-text">AI Tools</span> for Your Success
+                </h2>
+                <p class="features-description">
+                    Everything you need to prepare, practice, and succeed in your placement journey.
+                </p>
+            </div>
+
+            <!-- Features Grid -->
+            <div class="features-grid">
+                <!-- AI Resume Analyzer -->
+                <div class="feature-card glass scroll-animate" data-delay="0">
+                    <div class="feature-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <path d="m21 21-4.3-4.3"></path>
+                            <path d="M11 8v6"></path>
+                            <path d="M8 11h6"></path>
+                        </svg>
+                    </div>
+                    <h3 class="feature-title">AI Resume Analyzer</h3>
+                    <p class="feature-description">Get detailed analysis and suggestions to improve your resume with AI-powered insights.</p>
+                </div>
+
+                <!-- AI Mock Interviews -->
+                <div class="feature-card glass scroll-animate" data-delay="0.05">
+                    <div class="feature-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path>
+                            <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                            <line x1="12" x2="12" y1="19" y2="22"></line>
+                        </svg>
+                    </div>
+                    <h3 class="feature-title">AI Mock Interviews</h3>
+                    <p class="feature-description">Practice with AI-powered mock interviews that simulate real company interview scenarios.</p>
+                </div>
+
+                <!-- Placement Tracking -->
+                <div class="feature-card glass scroll-animate" data-delay="0.1">
+                    <div class="feature-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M3 3v18h18"></path>
+                            <path d="M18 17V9"></path>
+                            <path d="M13 17V5"></path>
+                            <path d="M8 17v-3"></path>
+                        </svg>
+                    </div>
+                    <h3 class="feature-title">Placement Tracking</h3>
+                    <p class="feature-description">Track your placement journey with detailed analytics and progress monitoring.</p>
+                </div>
+
+                <!-- ATS Resume Scoring -->
+                <div class="feature-card glass scroll-animate" data-delay="0.15">
+                    <div class="feature-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path>
+                            <polyline points="14 2 14 8 20 8"></polyline>
+                            <path d="m9 15 2 2 4-4"></path>
+                        </svg>
+                    </div>
+                    <h3 class="feature-title">ATS Resume Scoring</h3>
+                    <p class="feature-description">Optimize your resume for Applicant Tracking Systems with AI-based scoring.</p>
+                </div>
+
+                <!-- AI Career Guidance -->
+                <div class="feature-card glass scroll-animate" data-delay="0.2">
+                    <div class="feature-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"></polygon>
+                        </svg>
+                    </div>
+                    <h3 class="feature-title">AI Career Guidance</h3>
+                    <p class="feature-description">Receive personalized career recommendations based on your skills and interests.</p>
+                </div>
+
+                <!-- Skill Gap Analysis -->
+                <div class="feature-card glass scroll-animate" data-delay="0.25">
+                    <div class="feature-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <circle cx="12" cy="12" r="6"></circle>
+                            <circle cx="12" cy="12" r="2"></circle>
+                        </svg>
+                    </div>
+                    <h3 class="feature-title">Skill Gap Analysis</h3>
+                    <p class="feature-description">Identify skill gaps and get recommendations to improve your placement readiness.</p>
+                </div>
+
+                <!-- Interview Question Generator -->
+                <div class="feature-card glass scroll-animate" data-delay="0.3">
+                    <div class="feature-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+                            <path d="M12 17h.01"></path>
+                        </svg>
+                    </div>
+                    <h3 class="feature-title">Interview Question Generator</h3>
+                    <p class="feature-description">Generate company-specific interview questions to practice and prepare effectively.</p>
+                </div>
+
+                <!-- Company Preparation Assistant -->
+                <div class="feature-card glass scroll-animate" data-delay="0.35">
+                    <div class="feature-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"></path>
+                            <path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"></path>
+                            <path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"></path>
+                            <path d="M10 6h4"></path>
+                            <path d="M10 10h4"></path>
+                            <path d="M10 14h4"></path>
+                            <path d="M10 18h4"></path>
+                        </svg>
+                    </div>
+                    <h3 class="feature-title">Company Preparation Assistant</h3>
+                    <p class="feature-description">Get comprehensive preparation guides for specific companies and their processes.</p>
+                </div>
+
+                <!-- AI Chatbot Assistant -->
+                <div class="feature-card glass scroll-animate" data-delay="0.4">
+                    <div class="feature-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 8V4H8"></path>
+                            <rect width="16" height="12" x="4" y="8" rx="2"></rect>
+                            <path d="M2 14h2"></path>
+                            <path d="M20 14h2"></path>
+                            <path d="M15 13v2"></path>
+                            <path d="M9 13v2"></path>
+                        </svg>
+                    </div>
+                    <h3 class="feature-title">AI Chatbot Assistant</h3>
+                    <p class="feature-description">24/7 AI assistant to answer your placement-related queries instantly.</p>
+                </div>
+
+                <!-- Coding Assessment Support -->
+                <div class="feature-card glass scroll-animate" data-delay="0.45">
+                    <div class="feature-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="16 18 22 12 16 6"></polyline>
+                            <polyline points="8 6 2 12 8 18"></polyline>
+                        </svg>
+                    </div>
+                    <h3 class="feature-title">Coding Assessment Support</h3>
+                    <p class="feature-description">Practice coding problems and improve your programming skills for assessments.</p>
+                </div>
+
+                <!-- Senior Experiences -->
+                <div class="feature-card glass scroll-animate" data-delay="0.5">
+                    <div class="feature-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="9" cy="7" r="4"></circle>
+                            <path d="M22 21v-2a4 4 0 0 0-3-3.87"></path>
+                            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                        </svg>
+                    </div>
+                    <h3 class="feature-title">Senior Experiences</h3>
+                    <p class="feature-description">Placed seniors share interview experiences, preparation tips and guidance.</p>
+                </div>
+
+                <!-- Placement Resources -->
+                <div class="feature-card glass scroll-animate" data-delay="0.55">
+                    <div class="feature-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="m6 14 1.45-2.9A2 2 0 0 1 9.24 10H20a2 2 0 0 1 1.94 2.5l-1.55 6a2 2 0 0 1-1.94 1.5H4a2 2 0 0 1-2-2V5c0-1.1.9-2 2-2h3.93a2 2 0 0 1 1.66.9l.82 1.2a2 2 0 0 0 1.66.9H18a2 2 0 0 1 2 2v2"></path>
+                        </svg>
+                    </div>
+                    <h3 class="feature-title">Placement Resources</h3>
+                    <p class="feature-description">Access company-specific preparation materials, interview resources and aptitude content.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== ABOUT SECTION ===== -->
+    <section id="about" class="about">
+        <div class="about-container">
+            <!-- Section Header -->
+            <div class="section-header scroll-animate">
+                <span class="section-label">About</span>
+                <h2 class="section-title">
+                    About <span class="gradient-text">IARE AI Placement Portal</span>
+                </h2>
+            </div>
+
+            <!-- About Card -->
+            <div class="about-card scroll-animate">
+                <div class="about-grid">
+                    <!-- Text Content -->
+                    <div>
+                        <h3 class="about-title">Simplify Your Placement Journey</h3>
+                        <p class="about-text">
+                            IARE AI Placement Portal is an AI-powered platform designed to streamline the entire placement process for students. Our intelligent tools help students prepare for interviews, track their performance, access placement resources and improve placement success — all in one place.
+                        </p>
+                        <p class="about-text">
+                            With advanced AI technology, IARE AI Placement Portal analyzes student performance, identifies skill gaps and provides smart recommendations to maximize placement readiness. From AI-powered resume analysis to mock interviews and company-specific preparation resources, everything is integrated into a single platform.
+                        </p>
+
+                        <!-- Feature Points -->
+                        <div class="about-features">
+                            <div class="about-feature">
+                                <div class="about-feature-icon">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path>
+                                        <polyline points="14 2 14 8 20 8"></polyline>
+                                    </svg>
+                                </div>
+                                <span class="about-feature-label">AI Resume Analyzer</span>
+                            </div>
+                            <div class="about-feature">
+                                <div class="about-feature-icon">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M3 3v18h18"></path>
+                                        <path d="M18 17V9"></path>
+                                        <path d="M13 17V5"></path>
+                                        <path d="M8 17v-3"></path>
+                                    </svg>
+                                </div>
+                                <span class="about-feature-label">Smart Placement Tracking</span>
+                            </div>
+                            <div class="about-feature">
+                                <div class="about-feature-icon">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+                                        <circle cx="9" cy="7" r="4"></circle>
+                                        <path d="M22 21v-2a4 4 0 0 0-3-3.87"></path>
+                                        <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                                    </svg>
+                                </div>
+                                <span class="about-feature-label">Mock Interviews</span>
+                            </div>
+                            <div class="about-feature">
+                                <div class="about-feature-icon">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <polyline points="22 7 13.5 15.5 8.5 10.5 2 17"></polyline>
+                                        <polyline points="16 7 22 7 22 13"></polyline>
+                                    </svg>
+                                </div>
+                                <span class="about-feature-label">Progress Analytics</span>
+                            </div>
+                        </div>
+
+                        <!-- CTA Button -->
+                        <div class="about-cta">
+                            <a href="/student" class="btn btn-primary" data-home-login-trigger="true">
+                                Get Placed
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M5 12h14"></path>
+                                    <path d="m12 5 7 7-7 7"></path>
+                                </svg>
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Dashboard Previews -->
+                    <div class="dashboard-previews">
+                        <!-- Dashboard Skeleton -->
+                        <div class="preview-card">
+                            <div class="preview-header">
+                                <div class="preview-avatar shimmer"></div>
+                                <div class="preview-info">
+                                    <div class="preview-line shimmer" style="width: 33%;"></div>
+                                    <div class="preview-line preview-line-sm shimmer"></div>
+                                </div>
+                                <div class="preview-badge shimmer"></div>
+                            </div>
+                            <div class="preview-stats">
+                                <div class="preview-stat">
+                                    <div class="preview-stat-value">24</div>
+                                    <div class="preview-stat-line shimmer"></div>
+                                </div>
+                                <div class="preview-stat">
+                                    <div class="preview-stat-value">8</div>
+                                    <div class="preview-stat-line shimmer"></div>
+                                </div>
+                                <div class="preview-stat">
+                                    <div class="preview-stat-value">3</div>
+                                    <div class="preview-stat-line shimmer"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Analytics Preview -->
+                        <div class="preview-card">
+                            <div class="analytics-header">
+                                <div class="preview-line shimmer" style="width: 25%; height: 0.75rem;"></div>
+                                <div class="analytics-dots">
+                                    <div class="analytics-dot analytics-dot-primary"></div>
+                                    <div class="analytics-dot analytics-dot-accent"></div>
+                                </div>
+                            </div>
+                            <div class="analytics-chart">
+                                <div class="analytics-bar" style="height: 35%;"></div>
+                                <div class="analytics-bar" style="height: 55%;"></div>
+                                <div class="analytics-bar" style="height: 40%;"></div>
+                                <div class="analytics-bar" style="height: 70%;"></div>
+                                <div class="analytics-bar" style="height: 50%;"></div>
+                                <div class="analytics-bar" style="height: 65%;"></div>
+                                <div class="analytics-bar" style="height: 85%;"></div>
+                                <div class="analytics-bar" style="height: 60%;"></div>
+                                <div class="analytics-bar" style="height: 75%;"></div>
+                                <div class="analytics-bar" style="height: 90%;"></div>
+                            </div>
+                            <div class="analytics-footer">
+                                <div class="preview-line shimmer" style="width: 3rem; height: 0.5rem;"></div>
+                                <div class="preview-line shimmer" style="width: 3rem; height: 0.5rem;"></div>
+                            </div>
+                        </div>
+
+                        <!-- Small Preview Cards -->
+                        <div class="preview-small-grid">
+                            <!-- Interview Preview -->
+                            <div class="preview-small-card">
+                                <div class="preview-small-header">
+                                    <div class="preview-small-icon preview-small-icon-accent">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"></path>
+                                        </svg>
+                                    </div>
+                                    <div class="preview-line shimmer" style="width: 4rem; height: 0.625rem;"></div>
+                                </div>
+                                <div class="preview-lines">
+                                    <div class="preview-line shimmer" style="width: 100%; height: 0.5rem;"></div>
+                                    <div class="preview-line shimmer" style="width: 80%; height: 0.5rem;"></div>
+                                    <div class="preview-line shimmer" style="width: 60%; height: 0.5rem;"></div>
+                                </div>
+                            </div>
+
+                            <!-- Coding Preview -->
+                            <div class="preview-small-card">
+                                <div class="preview-small-header">
+                                    <div class="preview-small-icon preview-small-icon-primary">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <polyline points="16 18 22 12 16 6"></polyline>
+                                            <polyline points="8 6 2 12 8 18"></polyline>
+                                        </svg>
+                                    </div>
+                                    <div class="preview-line shimmer" style="width: 4rem; height: 0.625rem;"></div>
+                                </div>
+                                <div class="preview-lines">
+                                    <div class="preview-code-line">
+                                        <div class="preview-code-keyword preview-code-keyword-primary" style="width: 2rem; height: 0.5rem;"></div>
+                                        <div class="preview-line shimmer" style="flex: 1; height: 0.5rem;"></div>
+                                    </div>
+                                    <div class="preview-code-line" style="padding-left: 1rem;">
+                                        <div class="preview-code-keyword preview-code-keyword-accent" style="width: 1.5rem; height: 0.5rem;"></div>
+                                        <div class="preview-line shimmer" style="flex: 1; height: 0.5rem;"></div>
+                                    </div>
+                                    <div class="preview-code-line">
+                                        <div class="preview-code-keyword preview-code-keyword-primary" style="width: 1rem; height: 0.5rem;"></div>
+                                        <div class="preview-line shimmer" style="width: 3rem; height: 0.5rem;"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== FOOTER ===== -->
+    <footer id="contact" class="footer">
+        <div class="footer-container">
+            <div class="footer-card glass">
+                <div class="footer-grid">
+                    <!-- Brand -->
+                    <div class="footer-brand">
+                        <a href="#home" class="logo">
+                            <div class="logo-icon gradient-bg">
+                                <span style="color: var(--primary-foreground);">P</span>
+                            </div>
+                            <span class="logo-text">IARE AI Placement Portal</span>
+                        </a>
+                        <p>AI-powered placement platform helping students prepare, track performance and succeed in their placement journey.</p>
+                    </div>
+
+                    <!-- Quick Links -->
+                    <div>
+                        <h4 class="footer-title">Quick Links</h4>
+                        <ul class="footer-links">
+                            <li><a href="#home" class="footer-link">Home</a></li>
+                            <li><a href="#flow" class="footer-link">Flow</a></li>
+                            <li><a href="#features" class="footer-link">Features</a></li>
+                            <li><a href="#about" class="footer-link">About</a></li>
+                        </ul>
+                    </div>
+
+                    <!-- Contact -->
+                    <div>
+                        <h4 class="footer-title">Contact</h4>
+                        <ul class="footer-links">
+                            <li>
+                                <a href="mailto:support@iareplacements.in" class="contact-item">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <rect width="20" height="16" x="2" y="4" rx="2"></rect>
+                                        <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path>
+                                    </svg>
+                                    support@iareplacements.in
+                                </a>
+                            </li>
+                            <li>
+                                <a href="tel:+919876543210" class="contact-item">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
+                                    </svg>
+                                    +91 98765 43210
+                                </a>
+                            </li>
+                            <li>
+                                <span class="contact-item">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"></path>
+                                        <circle cx="12" cy="10" r="3"></circle>
+                                    </svg>
+                                    India
+                                </span>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <!-- Social -->
+                    <div>
+                        <h4 class="footer-title">Connect</h4>
+                        <div class="social-links">
+                            <a href="#" class="social-link" aria-label="LinkedIn">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path>
+                                    <rect width="4" height="12" x="2" y="9"></rect>
+                                    <circle cx="4" cy="4" r="2"></circle>
+                                </svg>
+                            </a>
+                            <a href="#" class="social-link" aria-label="Twitter">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.6 5.6 4.1 9 4-.9-4.2 4-6.6 7-3.8 1.1 0 3-1.2 3-1.2z"></path>
+                                </svg>
+                            </a>
+                            <a href="#" class="social-link" aria-label="GitHub">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.403 5.403 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4"></path>
+                                    <path d="M9 18c-4.51 2-5-2-7-2"></path>
+                                </svg>
+                            </a>
+                            <a href="#" class="social-link" aria-label="Instagram">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect width="20" height="20" x="2" y="2" rx="5" ry="5"></rect>
+                                    <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
+                                    <line x1="17.5" x2="17.51" y1="6.5" y2="6.5"></line>
+                                </svg>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bottom -->
+                <div class="footer-bottom">
+                    <p class="footer-copyright">&copy; 2026 IARE AI Placement Portal. All rights reserved.</p>
+                    <div class="footer-legal">
+                        <a href="#">Privacy Policy</a>
+                        <a href="#">Terms of Service</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="/js/home-navigation.js"></script>
 </body>
+
 </html>

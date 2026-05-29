@@ -6,46 +6,44 @@
     <title>Student Login | IARE AI Placement Portal</title>
     <link rel="stylesheet" href="/css/style.css">
 </head>
-<body class="login-body student-theme">
-<div class="background-orb orb-two"></div>
-<div class="background-orb orb-four"></div>
+<body class="student-login-page">
 
-<main class="auth-layout">
-    <section class="auth-info">
-        <a class="back-link" href="/">&larr; Back to portal</a>
-        <p class="eyebrow">Student Access</p>
-        <h1>Build confidence for every placement round with an AI-guided learning space.</h1>
-        <p>
-            Explore your preparation roadmap, discover company drives, practice interviews, and stay on top
-            of opportunities with a vibrant student dashboard.
-        </p>
-        <div class="credential-note">
-            <strong>Login Format</strong>
-            <span>Username: Your Roll No</span>
-            <span>Password: DOB in `ddMMyyyy` format</span>
-        </div>
-    </section>
+    <main class="login-page-wrapper">
+        <section class="login-card" id="cardContainer">
+            <div class="logo-container">
+                <img src="https://i.postimg.cc/prYT6shx/8ee6827a-7cf9-479e-b164-de0643a3b7a0.jpg" alt="IARE Placement Cell Logo">
+            </div>
 
-    <section class="auth-card student-card-accent">
-        <div class="auth-card-header">
-            <span class="role-badge">Student Login</span>
-            <h2>Start your journey</h2>
-            <p>Sign in to continue to the student dashboard.</p>
-        </div>
+            <form id="studentLoginForm" novalidate>
+                <div class="input-group">
+                    <label for="studentUsername">User ID</label>
+                    <input
+                        type="text"
+                        id="studentUsername"
+                        name="username"
+                        placeholder="College Roll Number"
+                        required>
+                </div>
 
-        <form id="studentLoginForm" class="auth-form" novalidate>
-            <label for="studentUsername">Roll No</label>
-            <input id="studentUsername" name="username" type="text" placeholder="Enter your roll number" required>
+                <div class="input-group">
+                    <label for="studentPassword">Password</label>
+                    <input
+                        type="password"
+                        id="studentPassword"
+                        name="password"
+                        placeholder="DDMMYYYY"
+                        required>
+                </div>
 
-            <label for="studentPassword">DOB Password</label>
-            <input id="studentPassword" name="password" type="password" placeholder="Example: 21082006" required>
+                <p id="studentError" class="error-message" aria-live="polite"></p>
 
-            <p id="studentError" class="error-message" aria-live="polite"></p>
-            <button type="submit" class="primary-btn full-width">Login as Student</button>
-        </form>
-    </section>
-</main>
+                <button type="submit" class="login-btn" id="loginBtn">
+                    Authenticate
+                </button>
+            </form>
+        </section>
+    </main>
 
-<script src="/js/auth.js"></script>
+    <script src="/js/auth.js"></script>
 </body>
 </html>
