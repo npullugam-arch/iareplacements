@@ -6,67 +6,104 @@
     <title>Student Preparation Resources | IARE AI Placement Portal</title>
     <link rel="stylesheet" href="/css/style.css">
     <link rel="stylesheet" href="/css/student-preparation-resources.css">
+    <script src="https://unpkg.com/lucide@0.294.0/dist/umd/lucide.min.js" crossorigin="anonymous"></script>
 </head>
-<body class="dashboard-body student-theme" data-portal-role="student">
-<div class="dashboard-shell">
-    <aside class="sidebar">
-        <div>
-            <div class="brand-block">
-                <span class="brand-chip">IARE AI Placement Portal</span>
-                <h2>Student Hub</h2>
-                <p>Access curated placement preparation resources</p>
-            </div>
+<body class="student-preparation-resources-page" data-portal-role="student">
+<div class="scroll-progress" id="scrollProgress"></div>
 
-            <nav class="sidebar-nav">
-                <a href="/student-dashboard">Dashboard</a>
-                <a href="/student-preparation-resources" class="active">Preparation Resources</a>
-                <a href="/student-interview-experiences">Interview Experiences</a>
-                <a href="/student-selected-students">Selected Students</a>
-                <a href="/student-placement-statistics">Placement Statistics</a>
-                <a href="/student-placement-drives">Placement Drives</a>
-            </nav>
+<main class="main">
+    <header class="statistics-page-header">
+        <a class="back-btn" id="resourcesBackBtn" href="/student-dashboard">
+            <i data-lucide="arrow-left"></i>
+            <span>Back</span>
+        </a>
+        <div class="header-title-block">
+            <h1>PREPARATION RESOURCES</h1>
+        </div>
+    </header>
+
+    <section class="controls-section">
+        <div class="search-bar-container">
+            <i data-lucide="search" class="search-icon"></i>
+            <input type="text" id="searchInput" placeholder="Search by company name, drive title...">
         </div>
 
-        <button class="ghost-btn logout-trigger" data-logout-role="student">Logout</button>
-    </aside>
-
-    <main class="dashboard-content">
-        <header class="topbar">
-            <div>
-                <p class="eyebrow">Preparation Resources</p>
-                <h1>Explore drive-wise preparation material</h1>
+        <div class="filters-row">
+            <div class="select-wrap">
+                <select id="driveFilter">
+                    <option value="">All Placement Drives</option>
+                </select>
             </div>
-            <div class="topbar-actions">
-                <a class="secondary-btn" href="/student-dashboard">Back to Dashboard</a>
+            <div class="select-wrap">
+                <select id="yearFilter">
+                    <option value="">All Hiring Years</option>
+                </select>
             </div>
-        </header>
+        </div>
+    </section>
 
-        <section class="student-resource-hero">
-            <div>
-                <span class="card-tag">Learning Material</span>
-                <h2>Find aptitude, coding, technical, and HR preparation PDFs by placement drive.</h2>
-                <p>Search by company, drive, or resource title and open the relevant PDF in a new tab whenever you need it.</p>
+    <div class="results-header">
+        <div class="results-count">
+            <span id="packCount">0</span> preparation packs found
+        </div>
+    </div>
+
+    <section>
+        <div id="studentResourceLoading" class="loading-state">Loading preparation resources...</div>
+        <div id="roadmapGrid" class="cards-grid"></div>
+        <div id="studentResourceEmpty" class="resource-empty-state hidden">
+            No preparation resources are available right now.
+        </div>
+    </section>
+</main>
+
+<div class="modal-overlay" id="packModal" aria-hidden="true">
+    <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="modalCompany" aria-describedby="modalDrive">
+        <button class="close-modal" id="closeModal" type="button" aria-label="Close preparation resources modal">
+            <i data-lucide="x"></i>
+        </button>
+
+        <div class="modal-header">
+            <div class="modal-company-info">
+                <div id="modalLogo" class="company-logo"></div>
+                <div class="modal-titles">
+                    <h2 id="modalCompany">Company Name</h2>
+                    <p id="modalDrive">Drive Name</p>
+                </div>
             </div>
-        </section>
-
-        <section class="resource-filters">
-            <input id="resourceSearchInput" type="text" placeholder="Search by company name, drive title, or resource title">
-            <select id="resourceDriveFilter">
-                <option value="">All Placement Drives</option>
-            </select>
-            <select id="resourceYearFilter">
-                <option value="">All Hiring Years</option>
-            </select>
-        </section>
-
-        <section>
-            <div id="studentResourceLoading" class="loading-state">Loading preparation resources...</div>
-            <div id="studentResourceList" class="student-resource-grid"></div>
-            <div id="studentResourceEmpty" class="resource-empty-state hidden">
-                No preparation resources are available right now.
+            <div class="modal-badge">
+                <span class="badge badge-dark">PREPARATION PACK</span>
             </div>
-        </section>
-    </main>
+        </div>
+
+        <div class="modal-body">
+            <div class="materials-grid">
+                <div class="material-card" id="mc-aptitude">
+                    <div class="mc-icon"><i data-lucide="calculator"></i></div>
+                    <h4>Aptitude Material</h4>
+                    <div class="mc-actions"></div>
+                </div>
+
+                <div class="material-card" id="mc-coding">
+                    <div class="mc-icon"><i data-lucide="code"></i></div>
+                    <h4>Coding Material</h4>
+                    <div class="mc-actions"></div>
+                </div>
+
+                <div class="material-card" id="mc-tech">
+                    <div class="mc-icon"><i data-lucide="cpu"></i></div>
+                    <h4>Technical Topics</h4>
+                    <div class="mc-actions"></div>
+                </div>
+
+                <div class="material-card" id="mc-hr">
+                    <div class="mc-icon"><i data-lucide="users"></i></div>
+                    <h4>HR Preparation</h4>
+                    <div class="mc-actions"></div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <script src="/js/auth.js"></script>

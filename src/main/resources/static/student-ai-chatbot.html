@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Placement Chatbot | IARE AI Placement Portal</title>
+    <link rel="stylesheet" href="/css/student-ai-chatbot.css">
+</head>
+<body class="student-ai-chatbot-page" data-portal-role="student">
+<main class="main">
+    <header class="statistics-page-header">
+        <a class="back-btn" href="/student-dashboard#ai-chatbot-card">
+            <span class="back-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24">
+                    <path d="M15 18l-6-6 6-6"></path>
+                </svg>
+            </span>
+            <span>Back</span>
+        </a>
+        <div class="header-title-block">
+            <h1>AI PLACEMENT CHATBOT</h1>
+        </div>
+    </header>
+
+    <section class="welcome-card">
+        <div class="welcome-copy">
+            <p class="eyebrow">Placement Assistant</p>
+            <h2>Your guided prep partner for drives, resumes, and interviews.</h2>
+            <p>Ask focused placement questions, rehearse company-specific preparation, and get structured guidance before you apply.</p>
+        </div>
+        <div class="welcome-badge">
+            <span>Static Demo UI</span>
+        </div>
+    </section>
+
+    <section class="chat-shell">
+        <div class="chat-header">
+            <div>
+                <p class="chat-title">Conversation</p>
+                <p class="chat-subtitle">Professional placement-focused guidance</p>
+            </div>
+            <div class="status-pill">Online</div>
+        </div>
+
+        <div class="chat-messages" id="chatMessages">
+            <article class="message-row bot">
+                <div class="message-avatar">AI</div>
+                <div class="message-bubble">
+                    <p>Hello! I can help you prepare for placement drives, improve your resume, and structure interview answers.</p>
+                </div>
+            </article>
+            <article class="message-row user">
+                <div class="message-bubble">
+                    <p>What should I focus on before an upcoming software developer drive?</p>
+                </div>
+                <div class="message-avatar user-avatar">You</div>
+            </article>
+            <article class="message-row bot">
+                <div class="message-avatar">AI</div>
+                <div class="message-bubble">
+                    <p>Start with aptitude basics, DSA revision, your top 2 projects, and a concise self-introduction. Also review the company’s hiring pattern and role requirements.</p>
+                </div>
+            </article>
+        </div>
+
+        <form class="chat-input-bar" id="chatForm">
+            <input id="chatInput" type="text" placeholder="Ask about drives, resume improvement, or interview preparation...">
+            <button type="submit" class="send-btn">Send</button>
+        </form>
+    </section>
+</main>
+
+<script src="/js/auth.js"></script>
+<script src="/js/student-ai-chatbot.js"></script>
+</body>
+</html>

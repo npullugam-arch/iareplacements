@@ -6,57 +6,29 @@
     <title>Student Notices | IARE AI Placement Portal</title>
     <link rel="stylesheet" href="/css/style.css">
     <link rel="stylesheet" href="/css/student-notices.css">
+    <script src="https://unpkg.com/lucide@0.294.0/dist/umd/lucide.min.js" crossorigin="anonymous"></script>
 </head>
-<body class="dashboard-body student-theme" data-portal-role="student">
-<div class="dashboard-shell">
-    <aside class="sidebar">
-        <div>
-            <div class="brand-block">
-                <span class="brand-chip">IARE AI Placement Portal</span>
-                <h2>Student Hub</h2>
-                <p>Stay informed with active updates</p>
-            </div>
+<body class="student-notices-page" data-portal-role="student">
+<div class="scroll-progress" id="scrollProgress"></div>
 
-            <nav class="sidebar-nav">
-                <a href="/student-dashboard">Dashboard</a>
-                <a href="/student-notices" class="active">Notices</a>
-                <a href="/student-dashboard#chatbot">AI Placement Chatbot</a>
-                <a href="/student-dashboard#drives">Company Drives</a>
-                <a href="/student-dashboard#roadmap">Preparation Roadmap</a>
-                <a href="/student-profile">Profile</a>
-            </nav>
+<main class="notices-main">
+    <header class="statistics-page-header">
+        <a class="back-btn" id="noticesBackBtn" href="/student-dashboard">
+            <i data-lucide="arrow-left"></i>
+            <span>Back</span>
+        </a>
+        <div class="header-title-block">
+            <h1>NOTICES</h1>
         </div>
+    </header>
 
-        <button class="ghost-btn logout-trigger" data-logout-role="student">Logout</button>
-    </aside>
-
-    <main class="dashboard-content">
-        <header class="topbar">
-            <div>
-                <p class="eyebrow">Student Notices</p>
-                <h1>Active placement announcements</h1>
-            </div>
-            <div class="topbar-actions">
-                <a class="secondary-btn" href="/student-dashboard">Back to Dashboard</a>
-            </div>
-        </header>
-
-        <section class="student-notices-hero">
-            <div>
-                <span class="card-tag">Current Updates</span>
-                <h2>Everything important for your placement journey, in one place.</h2>
-                <p>Only currently active notices are shown here so you can focus on what matters right now.</p>
-            </div>
-        </section>
-
-        <section>
-            <div id="studentNoticesList" class="student-notice-list"></div>
-            <div id="studentNoticesEmpty" class="notice-empty-state hidden">
-                No active notices right now. Please check again later.
-            </div>
-        </section>
-    </main>
-</div>
+    <section>
+        <div id="studentNoticesList" class="notices-list"></div>
+        <div id="studentNoticesEmpty" class="notice-empty-state hidden">
+            No active notices right now. Please check again later.
+        </div>
+    </section>
+</main>
 
 <script src="/js/auth.js"></script>
 <script src="/js/student-notices.js"></script>

@@ -3,63 +3,69 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Student Companies | IARE AI Placement Portal</title>
+    <title>Company Profiles | IARE AI Placement Portal</title>
+    <script src="https://unpkg.com/lucide@0.294.0/dist/umd/lucide.min.js" crossorigin="anonymous"></script>
     <link rel="stylesheet" href="/css/style.css">
     <link rel="stylesheet" href="/css/student-companies.css">
 </head>
-<body class="dashboard-body student-theme" data-portal-role="student">
-<div class="dashboard-shell">
-    <aside class="sidebar">
-        <div>
-            <div class="brand-block">
-                <span class="brand-chip">IARE AI Placement Portal</span>
-                <h2>Student Hub</h2>
-                <p>Explore hiring companies</p>
-            </div>
+<body class="student-companies-page" data-portal-role="student">
+    <div class="scroll-progress" id="scrollProgress"></div>
 
-            <nav class="sidebar-nav">
-                <a href="/student-dashboard">Dashboard</a>
-                <a href="/student-companies" class="active">Companies</a>
-                <a href="/student-notices">Notices</a>
-                <a href="/student-dashboard#mock">Mock Interview</a>
-                <a href="/student-dashboard#roadmap">Preparation Roadmap</a>
-                <a href="/student-profile">Profile</a>
-            </nav>
-        </div>
-
-        <button class="ghost-btn logout-trigger" data-logout-role="student">Logout</button>
-    </aside>
-
-    <main class="dashboard-content">
-        <header class="topbar">
-            <div>
-                <p class="eyebrow">Companies</p>
-                <h1>Discover recruiters and opportunities</h1>
-            </div>
-            <div class="topbar-actions">
-                <a class="secondary-btn" href="/student-dashboard">Back to Dashboard</a>
+    <main class="main">
+        <header class="statistics-page-header">
+            <a class="back-btn" id="companiesBackBtn" href="/student-dashboard">
+                <i data-lucide="arrow-left"></i>
+                <span>Back</span>
+            </a>
+            <div class="header-title-block">
+                <h1>COMPANIES</h1>
             </div>
         </header>
 
-        <section class="student-companies-hero">
-            <div>
-                <span class="card-tag">Career Network</span>
-                <h2>Explore company profiles curated by the placement team.</h2>
-                <p>Review industry, company type, and background details before preparing for drives and interviews.</p>
+        <section class="controls-section">
+            <div class="search-bar-container">
+                <i data-lucide="search" class="search-icon"></i>
+                <input type="text" id="searchInput" placeholder="Search by company name...">
+            </div>
+
+            <div class="filters-row">
+                <div class="select-wrap">
+                    <select id="typeFilter">
+                        <option value="">All Types</option>
+                    </select>
+                </div>
+                <div class="select-wrap">
+                    <select id="industryFilter">
+                        <option value="">All Industries</option>
+                    </select>
+                </div>
             </div>
         </section>
 
+        <div class="results-header">
+            <div class="results-count">
+                <span id="companyCount">0</span> profiles found
+            </div>
+        </div>
+
         <section>
-            <div id="studentCompaniesLoading" class="loading-state">Loading companies...</div>
-            <div id="studentCompaniesList" class="student-company-grid"></div>
-            <div id="studentCompaniesEmpty" class="company-empty-state hidden">
-                No companies are available right now. Please check again later.
+            <div id="studentCompaniesLoading" class="empty-state loading-state">
+                <i data-lucide="building-2"></i>
+                <h3>Loading companies...</h3>
+                <p>Please wait while we fetch company profiles.</p>
+            </div>
+
+            <div class="cards-grid" id="companiesGrid"></div>
+
+            <div id="studentCompaniesEmpty" class="empty-state hidden">
+                <i data-lucide="building-2"></i>
+                <h3>No companies found</h3>
+                <p>Try adjusting your search filters.</p>
             </div>
         </section>
     </main>
-</div>
 
-<script src="/js/auth.js"></script>
-<script src="/js/student-companies.js"></script>
+    <script src="/js/auth.js"></script>
+    <script src="/js/student-companies.js"></script>
 </body>
 </html>

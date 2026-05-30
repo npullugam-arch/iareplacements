@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Resume Analysis | IARE AI Placement Portal</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/student-resume-analyzer.css">
+</head>
+<body class="student-resume-analyzer-page" data-portal-role="student">
+<div class="scroll-progress" id="scrollProgress"></div>
+
+<main class="main">
+    <header class="statistics-page-header">
+        <a class="back-btn" id="resumeAnalyzerBackBtn" href="/student-dashboard#resume-analyzer-card">
+            <span class="back-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24">
+                    <path d="M15 18l-6-6 6-6"></path>
+                </svg>
+            </span>
+            <span>Back</span>
+        </a>
+        <div class="header-title-block">
+            <h1>RESUME ANALYZER</h1>
+        </div>
+    </header>
+
+    <div class="steps-bar" id="stepsBar">
+        <div class="step-item">
+            <div class="step-dot active" id="step1dot"><span>1</span></div>
+            <div class="step-label active" id="step1lbl">Upload Resume</div>
+        </div>
+        <div class="step-line" id="line12"></div>
+        <div class="step-item">
+            <div class="step-dot" id="step2dot"><span>2</span></div>
+            <div class="step-label" id="step2lbl">Analysing</div>
+        </div>
+        <div class="step-line" id="line23"></div>
+        <div class="step-item">
+            <div class="step-dot" id="step3dot"><span>3</span></div>
+            <div class="step-label" id="step3lbl">Results</div>
+        </div>
+    </div>
+
+    <div class="upload-section" id="uploadSection">
+        <p class="section-label">Input Method</p>
+        <div class="upload-zone ripple-container" id="dropZone">
+            <input type="file" id="fileInput" accept=".pdf,.doc,.docx,.txt">
+            <div class="upload-zone-icon">
+                <svg viewBox="0 0 24 24">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                    <polyline points="17 8 12 3 7 8"></polyline>
+                    <line x1="12" y1="3" x2="12" y2="15"></line>
+                </svg>
+            </div>
+            <h3 id="dropTitle">Drag and drop your resume here</h3>
+            <p>or <strong>click to browse</strong> from your device</p>
+            <div class="upload-formats">
+                <span class="format-pill">PDF</span>
+                <span class="format-pill">DOC</span>
+                <span class="format-pill">DOCX</span>
+                <span class="format-pill">TXT</span>
+            </div>
+        </div>
+
+        <div class="or-divider">or paste resume text below</div>
+
+        <div class="paste-wrap">
+            <div class="paste-label">
+                <svg viewBox="0 0 24 24">
+                    <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2M9 5a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2M9 5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2"></path>
+                </svg>
+                Paste Resume Text
+            </div>
+            <textarea id="resumeText" placeholder="Paste the full text of your resume here - personal details, education, skills, experience, projects, certifications..."></textarea>
+        </div>
+
+        <button class="analyse-btn ripple-container" id="analyseBtn" type="button" disabled>
+            <svg viewBox="0 0 24 24">
+                <circle cx="11" cy="11" r="8"></circle>
+                <path d="m21 21-4.35-4.35"></path>
+            </svg>
+            Analyse Resume
+        </button>
+
+        <div class="error-state" id="errorState"></div>
+    </div>
+
+    <div class="loading-state" id="loadingSection">
+        <div class="loading-ring"></div>
+        <div class="loading-title">Analysing your resume...</div>
+        <div class="loading-sub">Our AI is reading every line carefully</div>
+        <div class="loading-steps">
+            <div class="loading-step" id="ls1"><span class="loading-step-dot"></span>Parsing structure and sections</div>
+            <div class="loading-step" id="ls2"><span class="loading-step-dot"></span>Evaluating skills and experience</div>
+            <div class="loading-step" id="ls3"><span class="loading-step-dot"></span>Checking keyword relevance</div>
+            <div class="loading-step" id="ls4"><span class="loading-step-dot"></span>Generating personalised insights</div>
+        </div>
+    </div>
+
+    <div class="results-section" id="resultsSection">
+        <p class="section-label">Analysis Results</p>
+
+        <div class="score-hero">
+            <div class="score-ring-wrap">
+                <svg viewBox="0 0 100 100">
+                    <circle class="score-ring-bg" cx="50" cy="50" r="45"></circle>
+                    <circle class="score-ring-fill" id="scoreRing" cx="50" cy="50" r="45"></circle>
+                </svg>
+                <div class="score-number">
+                    <div class="score-val" id="scoreVal">-</div>
+                    <div class="score-unit">/ 100</div>
+                </div>
+            </div>
+            <div class="score-info">
+                <div class="score-grade" id="scoreGrade">-</div>
+                <div class="score-headline" id="scoreHeadline">-</div>
+                <div class="score-summary" id="scoreSummary">-</div>
+            </div>
+        </div>
+
+        <div class="subscores-grid" id="subscoresGrid"></div>
+        <div class="analysis-cols" id="analysisCols"></div>
+
+        <div class="keywords-section">
+            <p class="section-label">Keyword Analysis</p>
+            <div class="keyword-legend">
+                <span class="legend-item"><span class="legend-dot legend-dot-green"></span>Present in resume</span>
+                <span class="legend-item"><span class="legend-dot legend-dot-red"></span>Missing / recommended</span>
+            </div>
+            <div class="keywords-wrap" id="keywordsWrap"></div>
+        </div>
+
+        <div class="recs-section">
+            <p class="section-label">Actionable Recommendations</p>
+            <div class="rec-list" id="recList"></div>
+        </div>
+
+        <div class="actions-row">
+            <button class="action-btn primary ripple-container" id="exportBtn" type="button">
+                <svg viewBox="0 0 24 24">
+                    <polyline points="6 9 6 2 18 2 18 9"></polyline>
+                    <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
+                    <rect x="6" y="14" width="12" height="8"></rect>
+                </svg>
+                Export Report
+            </button>
+            <button class="action-btn secondary ripple-container" id="resetBtn" type="button">
+                <svg viewBox="0 0 24 24">
+                    <polyline points="1 4 1 10 7 10"></polyline>
+                    <path d="M3.51 15a9 9 0 1 0 .49-4.3"></path>
+                </svg>
+                Analyse Another
+            </button>
+        </div>
+    </div>
+</main>
+
+<script src="/js/auth.js"></script>
+<script src="/js/student-resume-analyzer.js"></script>
+</body>
+</html>

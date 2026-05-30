@@ -1,145 +1,442 @@
-.student-companies-hero,
-.student-company-card {
-    background: rgba(10, 20, 38, 0.76);
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    border-radius: 24px;
-    box-shadow: 0 24px 70px rgba(0, 0, 0, 0.22);
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap');
+
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
 }
 
-.topbar-actions {
-    display: flex;
-    gap: 12px;
-    align-items: center;
+:root {
+    --white: #ffffff;
+    --black: #0a0a0a;
+    --gray-50: #fafafa;
+    --gray-100: #f4f4f4;
+    --gray-200: #e5e5e5;
+    --gray-300: #d4d4d4;
+    --gray-500: #737373;
+    --gray-700: #404040;
 }
 
-.student-companies-hero {
-    padding: 28px;
-    margin-bottom: 24px;
-    background: linear-gradient(145deg, rgba(31, 162, 255, 0.16), rgba(83, 209, 200, 0.08));
+body.student-companies-page {
+    font-family: 'DM Sans', sans-serif;
+    background: #f8fafc !important;
+    background-color: #f8fafc !important;
+    color: #0a0a0a;
+    min-height: 100vh;
+    overflow-x: hidden;
 }
 
-.student-companies-hero h2 {
-    margin: 10px 0 8px;
-}
-
-.student-companies-hero p,
-.student-company-card p,
-.student-company-meta,
-.company-empty-state,
-.loading-state {
-    color: var(--text-secondary);
-    line-height: 1.7;
-}
-
-.student-company-grid {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 18px;
-}
-
-.student-company-card {
-    padding: 22px;
-    transition: transform 0.25s ease, border-color 0.25s ease;
-}
-
-.student-company-card:hover {
-    transform: translateY(-3px);
-    border-color: rgba(83, 209, 200, 0.32);
-}
-
-.student-company-header {
-    display: flex;
-    gap: 16px;
-    align-items: center;
-}
-
-.student-company-logo {
-    width: 68px;
-    height: 68px;
-    border-radius: 18px;
-    object-fit: cover;
-    background: rgba(255, 255, 255, 0.08);
-    border: 1px solid rgba(255, 255, 255, 0.12);
-}
-
-.student-company-header h3 {
-    margin: 0 0 8px;
-}
-
-.student-badge-row,
-.student-company-meta {
-    display: flex;
-    gap: 10px;
-    flex-wrap: wrap;
-}
-
-.student-badge-row {
-    margin: 14px 0 16px;
-}
-
-.student-company-meta {
-    margin-top: 14px;
-    font-size: 0.92rem;
-}
-
-.company-type-badge,
-.industry-badge {
-    display: inline-flex;
-    align-items: center;
-    border-radius: 999px;
-    padding: 8px 12px;
-    font-size: 0.84rem;
-    font-weight: 700;
-}
-
-.company-type-badge {
-    background: rgba(255, 179, 102, 0.14);
-    color: #ffd79b;
-    border: 1px solid rgba(255, 179, 102, 0.26);
-}
-
-.industry-badge {
-    background: rgba(83, 209, 200, 0.14);
-    color: #9deee7;
-    border: 1px solid rgba(83, 209, 200, 0.26);
-}
-
-.company-website-btn {
-    display: inline-flex;
-    margin-top: 18px;
-}
-
-.loading-state,
-.company-empty-state {
-    padding: 28px;
-    border-radius: 20px;
-    background: rgba(255, 255, 255, 0.06);
-    border: 1px dashed rgba(255, 255, 255, 0.18);
-    text-align: center;
+body.student-companies-page::before,
+body.student-companies-page::after {
+    content: none !important;
 }
 
 .hidden {
     display: none !important;
 }
 
-@media (max-width: 1080px) {
-    .student-company-grid {
+.main {
+    max-width: 1536px;
+    width: 96%;
+    margin: 0 auto;
+    padding: 2rem 1.5rem 3rem;
+}
+
+.statistics-page-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+}
+
+.back-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+    color: #0a0a0a;
+    background: #ffffff;
+    border: 1px solid #e5e5e5;
+    border-radius: 9999px;
+    padding: 10px 16px;
+    font-weight: 700;
+    font-size: 0.9rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    flex-shrink: 0;
+}
+
+.back-btn svg {
+    width: 18px;
+    height: 18px;
+}
+
+.back-btn:hover {
+    border-color: #0a0a0a;
+    transform: translateX(-3px);
+}
+
+.header-title-block {
+    flex: 1;
+    min-width: 220px;
+}
+
+.header-title-block h1 {
+    font-size: clamp(1.2rem, 3.5vw, 1.7rem);
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    line-height: 1.1;
+    margin: 0;
+}
+
+.controls-section {
+    background: #ffffff;
+    border-radius: 16px;
+    border: 1px solid #e5e5e5;
+    padding: 1rem 1.5rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    display: flex;
+    gap: 2rem;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.search-bar-container {
+    position: relative;
+    flex: 1;
+    min-width: 250px;
+}
+
+.search-icon {
+    position: absolute;
+    left: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #737373;
+    width: 20px;
+    height: 20px;
+}
+
+#searchInput {
+    width: 100%;
+    padding: 10px 16px 10px 48px;
+    background: #fafafa;
+    border: 1px solid #e5e5e5;
+    border-radius: 9999px;
+    font-family: inherit;
+    font-size: 0.95rem;
+    color: #0a0a0a;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+#searchInput:focus {
+    outline: none;
+    border-color: #0a0a0a;
+    background: #ffffff;
+}
+
+#searchInput::placeholder {
+    color: #737373;
+}
+
+.filters-row {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+    flex: 1;
+    min-width: 300px;
+}
+
+.select-wrap select {
+    width: 100%;
+    padding: 10px 36px 10px 16px;
+    background: #fafafa;
+    border: 1px solid #e5e5e5;
+    border-radius: 9999px;
+    font-family: inherit;
+    font-size: 0.95rem;
+    color: #0a0a0a;
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%23737373%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22%3E%3C%2Fpolyline%3E%3C%2Fsvg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    background-size: 16px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.select-wrap select:focus {
+    outline: none;
+    border-color: #0a0a0a;
+    background: #ffffff;
+}
+
+.results-header {
+    margin-bottom: 1.5rem;
+}
+
+.results-count {
+    font-size: 1rem;
+    color: #737373;
+}
+
+.results-count span {
+    font-weight: 700;
+    color: #0a0a0a;
+}
+
+.cards-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+}
+
+.company-card {
+    background: #ffffff;
+    border: 1px solid #e5e5e5;
+    border-radius: 16px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    position: relative;
+    overflow: hidden;
+    opacity: 0;
+    transform: translateY(30px);
+    transition: opacity 0.6s ease-out, transform 0.6s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease, border-color 0.3s ease;
+}
+
+.company-card.visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+@media (hover: hover) {
+    .company-card:hover {
+        box-shadow: 0 16px 40px rgba(0, 0, 0, 0.1);
+        border-color: #d4d4d4;
+        transform: translateY(-4px) !important;
+    }
+}
+
+.company-header {
+    display: flex;
+    gap: 1rem;
+    align-items: flex-start;
+}
+
+.company-logo {
+    width: 60px;
+    height: 60px;
+    border-radius: 12px;
+    border: 1px solid #e5e5e5;
+    background: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px;
+    flex-shrink: 0;
+    overflow: hidden;
+}
+
+.company-logo img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+}
+
+.company-logo.text-logo {
+    background: #f4f4f4;
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: #0a0a0a;
+}
+
+.company-titles {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 0;
+}
+
+.company-titles h3 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #0a0a0a;
+    line-height: 1.2;
+}
+
+.card-badges {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.badge {
+    padding: 4px 10px;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    border: 1px solid transparent;
+}
+
+.badge-orange,
+.badge-teal,
+.badge-gray {
+    background: #f4f4f4;
+    color: #0a0a0a;
+    border-color: #e5e5e5;
+}
+
+.company-description {
+    font-size: 0.9rem;
+    color: #404040;
+    line-height: 1.5;
+    flex-grow: 1;
+}
+
+.company-meta {
+    display: flex;
+    gap: 1rem;
+    font-size: 0.85rem;
+    color: #737373;
+    font-weight: 500;
+    flex-wrap: wrap;
+}
+
+.meta-item {
+    display: flex;
+    align-items: center;
+}
+
+.btn-visit {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    align-self: flex-start;
+    padding: 8px 24px;
+    background: #ffffff;
+    color: #0a0a0a;
+    border-radius: 9999px;
+    border: 1px solid #0a0a0a;
+    font-size: 0.9rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+
+.btn-visit:hover {
+    background: #f4f4f4;
+    color: #0a0a0a;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 4rem 2rem;
+    color: #737373;
+    background: #ffffff;
+    border: 1px solid #e5e5e5;
+    border-radius: 16px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.empty-state svg {
+    width: 48px;
+    height: 48px;
+    margin-bottom: 1rem;
+    color: #d4d4d4;
+}
+
+.empty-state h3 {
+    font-weight: 600;
+    color: #0a0a0a;
+    margin-bottom: 8px;
+}
+
+.loading-state {
+    margin-bottom: 1.5rem;
+}
+
+.scroll-progress {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 0%;
+    height: 3px;
+    background: #0a0a0a;
+    z-index: 999;
+}
+
+.ripple-container {
+    overflow: hidden;
+    position: relative;
+}
+
+.ripple {
+    position: absolute;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.08);
+    transform: scale(0);
+    animation: rippleAnim 0.6s linear;
+    pointer-events: none;
+}
+
+@keyframes rippleAnim {
+    to {
+        transform: scale(4);
+        opacity: 0;
+    }
+}
+
+.card {}
+
+@media (max-width: 1100px) {
+    .cards-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 800px) {
+    .controls-section {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 1rem;
+    }
+
+    .search-bar-container {
+        min-width: 0;
+    }
+
+    .filters-row {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        width: 100%;
+        gap: 1rem;
+        min-width: 0;
+    }
+
+    .statistics-page-header {
+        gap: 0.85rem;
+    }
+
+    .back-btn {
+        align-self: center;
+    }
+}
+
+@media (max-width: 650px) {
+    .cards-grid {
         grid-template-columns: 1fr;
     }
 }
 
-@media (max-width: 720px) {
-    .topbar-actions {
-        flex-direction: column;
-        align-items: stretch;
-    }
-
-    .student-companies-hero,
-    .student-company-card {
-        padding: 20px;
-    }
-
-    .student-company-header {
-        align-items: flex-start;
+@media (max-width: 500px) {
+    .filters-row {
+        grid-template-columns: 1fr;
     }
 }

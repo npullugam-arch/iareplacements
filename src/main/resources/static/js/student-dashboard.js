@@ -318,6 +318,41 @@
 
         if (window.location.hash === "#interview-experience-card") {
             highlightDashboardCard("interview-experience-card");
+            return;
+        }
+
+        if (window.location.hash === "#companies-card") {
+            highlightDashboardCard("companies-card");
+            return;
+        }
+
+        if (window.location.hash === "#notices-card") {
+            highlightDashboardCard("notices-card");
+            return;
+        }
+
+        if (window.location.hash === "#preparation-resources-card") {
+            highlightDashboardCard("preparation-resources-card");
+            return;
+        }
+
+        if (window.location.hash === "#resume-analyzer-card") {
+            highlightDashboardCard("resume-analyzer-card");
+            return;
+        }
+
+        if (window.location.hash === "#student-profile-card") {
+            highlightDashboardCard("student-profile-card");
+            return;
+        }
+
+        if (window.location.hash === "#ai-chatbot-card") {
+            highlightDashboardCard("ai-chatbot-card");
+            return;
+        }
+
+        if (window.location.hash === "#mock-interview-card") {
+            highlightDashboardCard("mock-interview-card");
         }
     }
 

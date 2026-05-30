@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mock Interview | IARE AI Placement Portal</title>
+    <link rel="stylesheet" href="/css/student-mock-interview.css">
+</head>
+<body class="student-mock-interview-page" data-portal-role="student">
+<main class="main">
+    <header class="statistics-page-header">
+        <a class="back-btn" href="/student-dashboard#mock-interview-card">
+            <span class="back-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24">
+                    <path d="M15 18l-6-6 6-6"></path>
+                </svg>
+            </span>
+            <span>Back</span>
+        </a>
+        <div class="header-title-block">
+            <h1>MOCK INTERVIEW</h1>
+        </div>
+    </header>
+
+    <section class="interview-grid">
+        <article class="setup-card">
+            <p class="eyebrow">Setup</p>
+            <h2>Configure your practice round</h2>
+            <div class="field-stack">
+                <label>
+                    <span>Target Role</span>
+                    <select id="roleSelect">
+                        <option>Software Developer</option>
+                        <option>Data Analyst</option>
+                        <option>Testing Engineer</option>
+                    </select>
+                </label>
+                <label>
+                    <span>Target Company</span>
+                    <select id="companySelect">
+                        <option>Microsoft</option>
+                        <option>Amazon</option>
+                        <option>TCS</option>
+                    </select>
+                </label>
+                <button id="startInterviewBtn" class="primary-btn" type="button">Start Interview</button>
+            </div>
+        </article>
+
+        <article class="question-card">
+            <div class="question-header">
+                <div>
+                    <p class="eyebrow">Question</p>
+                    <h2 id="questionTitle">Tell me about yourself.</h2>
+                </div>
+                <span class="question-badge">Round 1</span>
+            </div>
+            <p class="question-copy" id="questionCopy">Structure your answer around your academics, key projects, technical strengths, and why you are interested in the role.</p>
+            <textarea id="answerBox" placeholder="Type your answer here..."></textarea>
+            <div class="action-row">
+                <button id="nextQuestionBtn" class="secondary-btn" type="button">Next Question</button>
+                <button id="submitAnswerBtn" class="primary-btn" type="button">Review Answer</button>
+            </div>
+        </article>
+    </section>
+
+    <section class="feedback-card">
+        <div class="feedback-header">
+            <div>
+                <p class="eyebrow">Tips & Feedback</p>
+                <h2>Practice guidance</h2>
+            </div>
+            <span class="status-pill">Static Demo UI</span>
+        </div>
+        <div class="tips-grid">
+            <article class="tip-panel">
+                <h3>What to focus on</h3>
+                <ul>
+                    <li>Keep your answer structured and concise.</li>
+                    <li>Use specific examples from projects or internships.</li>
+                    <li>Show relevance to the selected role and company.</li>
+                </ul>
+            </article>
+            <article class="tip-panel">
+                <h3>Sample feedback</h3>
+                <p id="feedbackText">A stronger answer should mention your technical stack, measurable project outcomes, and one clear reason you fit this role.</p>
+            </article>
+        </div>
+    </section>
+</main>
+
+<script src="/js/auth.js"></script>
+<script src="/js/student-mock-interview.js"></script>
+</body>
+</html>
