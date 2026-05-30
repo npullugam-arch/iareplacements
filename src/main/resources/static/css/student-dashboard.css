@@ -652,6 +652,13 @@ body.student-dashboard-page {
     }
 }
 
+.card-return-highlight {
+    border-color: var(--black) !important;
+    box-shadow: 0 0 0 3px rgba(10, 10, 10, 0.08), 0 18px 38px rgba(0, 0, 0, 0.12) !important;
+    transform: translateY(-4px);
+    transition: box-shadow 0.25s ease, border-color 0.25s ease, transform 0.25s ease;
+}
+
 @media (max-width: 1024px) {
     .cards-grid {
         grid-template-columns: repeat(2, 1fr);

@@ -6,70 +6,105 @@
     <title>Student Placement Statistics | IARE AI Placement Portal</title>
     <link rel="stylesheet" href="/css/style.css">
     <link rel="stylesheet" href="/css/student-placement-statistics.css">
+    <script src="https://unpkg.com/lucide@latest"></script>
 </head>
-<body class="dashboard-body student-theme" data-portal-role="student">
-<div class="dashboard-shell">
-    <aside class="sidebar">
-        <div>
-            <div class="brand-block">
-                <span class="brand-chip">IARE AI Placement Portal</span>
-                <h2>Student Hub</h2>
-                <p>Explore drive-wise placement outcomes</p>
-            </div>
-
-            <nav class="sidebar-nav">
-                <a href="/student-dashboard">Dashboard</a>
-                <a href="/student-placement-statistics" class="active">Placement Statistics</a>
-                <a href="/student-placement-drives">Placement Drives</a>
-                <a href="/student-companies">Companies</a>
-                <a href="/student-notices">Notices</a>
-            </nav>
+<body class="student-statistics-page" data-portal-role="student">
+<main class="statistics-main">
+    <header class="statistics-page-header">
+        <a class="back-btn" id="statisticsBackBtn" href="/student-dashboard">
+            <i data-lucide="arrow-left"></i>
+            <span>Back</span>
+        </a>
+        <div class="header-title-block">
+            <h1>PLACEMENT STATISTICS</h1>
         </div>
+    </header>
 
-        <button class="ghost-btn logout-trigger" data-logout-role="student">Logout</button>
-    </aside>
-
-    <main class="dashboard-content">
-        <header class="topbar">
-            <div>
-                <p class="eyebrow">Placement Statistics</p>
-                <h1>Understand outcomes drive by drive</h1>
+    <section class="controls-section">
+        <div class="search-bar-container">
+            <i data-lucide="search" class="search-icon"></i>
+            <input id="statisticsSearchInput" type="text" placeholder="Search by company name or drive title...">
+        </div>
+        <div class="filters-row">
+            <div class="select-wrap">
+                <select id="statisticsYearFilter">
+                    <option value="">All Hiring Years</option>
+                </select>
             </div>
-            <div class="topbar-actions">
-                <a class="secondary-btn" href="/student-dashboard">Back to Dashboard</a>
+            <div class="select-wrap">
+                <select id="statisticsStatusFilter">
+                    <option value="">All Statuses</option>
+                    <option value="Upcoming">Upcoming</option>
+                    <option value="Ongoing">Ongoing</option>
+                    <option value="Completed">Completed</option>
+                    <option value="Closed">Closed</option>
+                </select>
             </div>
-        </header>
+        </div>
+    </section>
 
-        <section class="student-statistics-hero">
-            <div>
-                <span class="card-tag">Outcome Insights</span>
-                <h2>Compare application funnel and package trends across placement drives.</h2>
-                <p>Search by company or drive title and filter by hiring year or drive status to focus on relevant results.</p>
+    <section>
+        <div id="studentStatisticsLoading" class="loading-state">Loading placement statistics...</div>
+        <div id="studentStatisticsList" class="cards-grid"></div>
+        <div id="studentStatisticsEmpty" class="empty-state hidden">
+            No placement statistics are available right now. Please check again later.
+        </div>
+    </section>
+</main>
+
+<div class="modal-overlay" id="statsModal" aria-hidden="true">
+    <div class="modal-content placement-funnel-modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle" aria-describedby="modalSub">
+        <button class="close-modal" id="closeModalBtn" type="button" aria-label="Close placement funnel modal">
+            <i data-lucide="x"></i>
+        </button>
+        <div class="modal-header">
+            <h2 id="modalTitle">Placement Funnel</h2>
+            <p id="modalSub">Detailed breakdown</p>
+        </div>
+        <div class="modal-body">
+            <div class="funnel-breakdown-card">
+                <div class="funnel-visual-panel">
+                    <div class="large-donut" id="modalDonut" aria-hidden="true">
+                        <div class="donut-inner">
+                            <span class="total-label" id="modalTotal">0</span>
+                            <span class="sub-label">APPLIED</span>
+                        </div>
+                    </div>
+                    <p class="funnel-caption" id="modalDriveLabel">Selected placement drive breakdown</p>
+                </div>
+                <div class="chart-legend" id="modalLegend">
+                    <div class="legend-item">
+                        <span class="dot dot-selected"></span>
+                        <div class="legend-text">
+                            <span class="legend-title">Selected</span>
+                            <span class="legend-val" id="valSelected">0 (0%)</span>
+                        </div>
+                    </div>
+                    <div class="legend-item">
+                        <span class="dot dot-shortlisted"></span>
+                        <div class="legend-text">
+                            <span class="legend-title">Shortlisted (Not Selected)</span>
+                            <span class="legend-val" id="valShortlisted">0 (0%)</span>
+                        </div>
+                    </div>
+                    <div class="legend-item">
+                        <span class="dot dot-attended"></span>
+                        <div class="legend-text">
+                            <span class="legend-title">Attended (Not Shortlisted)</span>
+                            <span class="legend-val" id="valAttended">0 (0%)</span>
+                        </div>
+                    </div>
+                    <div class="legend-item">
+                        <span class="dot dot-not-attended"></span>
+                        <div class="legend-text">
+                            <span class="legend-title">Did Not Attend</span>
+                            <span class="legend-val" id="valNotAttended">0 (0%)</span>
+                        </div>
+                    </div>
+                </div>
             </div>
-        </section>
-
-        <section class="statistics-filters">
-            <input id="statisticsSearchInput" type="text" placeholder="Search by company name or drive title">
-            <select id="statisticsYearFilter">
-                <option value="">All Hiring Years</option>
-            </select>
-            <select id="statisticsStatusFilter">
-                <option value="">All Statuses</option>
-                <option>Upcoming</option>
-                <option>Ongoing</option>
-                <option>Completed</option>
-                <option>Closed</option>
-            </select>
-        </section>
-
-        <section>
-            <div id="studentStatisticsLoading" class="loading-state">Loading placement statistics...</div>
-            <div id="studentStatisticsList" class="student-statistics-grid"></div>
-            <div id="studentStatisticsEmpty" class="statistics-empty-state hidden">
-                No placement statistics are available right now. Please check again later.
-            </div>
-        </section>
-    </main>
+        </div>
+    </div>
 </div>
 
 <script src="/js/auth.js"></script>

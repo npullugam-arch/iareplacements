@@ -281,6 +281,29 @@
         }
     }
 
+    function handleDashboardHashFocus() {
+        if (window.location.hash !== "#placement-statistics-card") {
+            return;
+        }
+
+        const targetCard = document.getElementById("placement-statistics-card");
+        if (!targetCard) {
+            return;
+        }
+
+        window.setTimeout(function () {
+            targetCard.scrollIntoView({
+                behavior: "smooth",
+                block: "center"
+            });
+            targetCard.classList.add("card-return-highlight");
+
+            window.setTimeout(function () {
+                targetCard.classList.remove("card-return-highlight");
+            }, 1800);
+        }, 250);
+    }
+
     document.addEventListener("DOMContentLoaded", function () {
         const authState = window.PlacementPortalAuth
             ? window.PlacementPortalAuth.getAuthState()
@@ -298,5 +321,6 @@
         initScrollProgress();
         initKeyboardCards();
         initLucideIcons();
+        handleDashboardHashFocus();
     });
 })();
