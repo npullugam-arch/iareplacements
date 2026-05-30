@@ -281,12 +281,8 @@
         }
     }
 
-    function handleDashboardHashFocus() {
-        if (window.location.hash !== "#placement-statistics-card") {
-            return;
-        }
-
-        const targetCard = document.getElementById("placement-statistics-card");
+    function highlightDashboardCard(cardId) {
+        const targetCard = document.getElementById(cardId);
         if (!targetCard) {
             return;
         }
@@ -302,6 +298,27 @@
                 targetCard.classList.remove("card-return-highlight");
             }, 1800);
         }, 250);
+    }
+
+    function handleDashboardHashFocus() {
+        if (window.location.hash === "#placement-statistics-card") {
+            highlightDashboardCard("placement-statistics-card");
+            return;
+        }
+
+        if (window.location.hash === "#placement-drives-card") {
+            highlightDashboardCard("placement-drives-card");
+            return;
+        }
+
+        if (window.location.hash === "#selected-students-card") {
+            highlightDashboardCard("selected-students-card");
+            return;
+        }
+
+        if (window.location.hash === "#interview-experience-card") {
+            highlightDashboardCard("interview-experience-card");
+        }
     }
 
     document.addEventListener("DOMContentLoaded", function () {

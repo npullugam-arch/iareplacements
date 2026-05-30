@@ -3,86 +3,123 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Student Interview Experiences | IARE AI Placement Portal</title>
+    <title>Interview Experiences | IARE AI Placement Portal</title>
+    <script src="https://unpkg.com/lucide@0.294.0/dist/umd/lucide.min.js" crossorigin="anonymous"></script>
     <link rel="stylesheet" href="/css/style.css">
     <link rel="stylesheet" href="/css/student-interview-experiences.css">
 </head>
-<body class="dashboard-body student-theme" data-portal-role="student">
-<div class="dashboard-shell">
-    <aside class="sidebar">
-        <div>
-            <div class="brand-block">
-                <span class="brand-chip">IARE AI Placement Portal</span>
-                <h2>Student Hub</h2>
-                <p>Learn from real interview experiences</p>
-            </div>
+<body class="student-interview-experiences-page" data-portal-role="student">
+    <div class="scroll-progress" id="scrollProgress"></div>
 
-            <nav class="sidebar-nav">
-                <a href="/student-dashboard">Dashboard</a>
-                <a href="/student-interview-experiences" class="active">Interview Experiences</a>
-                <a href="/student-selected-students">Selected Students</a>
-                <a href="/student-placement-statistics">Placement Statistics</a>
-                <a href="/student-placement-drives">Placement Drives</a>
-                <a href="/student-companies">Companies</a>
-            </nav>
-        </div>
-
-        <button class="ghost-btn logout-trigger" data-logout-role="student">Logout</button>
-    </aside>
-
-    <main class="dashboard-content">
-        <header class="topbar">
-            <div>
-                <p class="eyebrow">Interview Experiences</p>
-                <h1>Study real student interview journeys</h1>
-            </div>
-            <div class="topbar-actions">
-                <a class="secondary-btn" href="/student-dashboard">Back to Dashboard</a>
+    <main class="main">
+        <header class="statistics-page-header">
+            <a class="back-btn" id="interviewExperienceBackBtn" href="/student-dashboard">
+                <i data-lucide="arrow-left"></i>
+                <span>Back</span>
+            </a>
+            <div class="header-title-block">
+                <h1>INTERVIEW EXPERIENCE</h1>
             </div>
         </header>
 
-        <section class="student-experience-hero">
-            <div>
-                <span class="card-tag">Preparation Insights</span>
-                <h2>Search role-wise experiences and understand what companies actually ask.</h2>
-                <p>Filter by drive, difficulty, result, or year and review coding, technical, HR, and preparation insights in one place.</p>
+        <section class="controls-section">
+            <div class="search-bar-container">
+                <i data-lucide="search" class="search-icon"></i>
+                <input type="text" id="searchInput" placeholder="Search by student, company, drive title, role...">
+            </div>
+
+            <div class="filters-row">
+                <div class="select-wrap">
+                    <select id="driveFilter">
+                        <option value="">All Placement Drives</option>
+                    </select>
+                </div>
+                <div class="select-wrap">
+                    <select id="difficultyFilter">
+                        <option value="">All Difficulty Levels</option>
+                        <option value="Easy">Easy</option>
+                        <option value="Medium">Medium</option>
+                        <option value="Hard">Hard</option>
+                    </select>
+                </div>
+                <div class="select-wrap">
+                    <select id="resultFilter">
+                        <option value="">All Final Results</option>
+                    </select>
+                </div>
+                <div class="select-wrap">
+                    <select id="yearFilter">
+                        <option value="">All Hiring Years</option>
+                    </select>
+                </div>
             </div>
         </section>
 
-        <section class="experience-filters">
-            <input id="experienceSearchInput" type="text" placeholder="Search by student, company, drive title, role, or technical topic">
-            <select id="experienceDriveFilter">
-                <option value="">All Placement Drives</option>
-            </select>
-            <select id="experienceDifficultyFilter">
-                <option value="">All Difficulty Levels</option>
-                <option>Easy</option>
-                <option>Medium</option>
-                <option>Hard</option>
-            </select>
-            <select id="experienceFinalResultFilter">
-                <option value="">All Final Results</option>
-                <option>Selected</option>
-                <option>Rejected</option>
-                <option>Waiting</option>
-                <option>Internship Offered</option>
-            </select>
-            <select id="experienceYearFilter">
-                <option value="">All Hiring Years</option>
-            </select>
-        </section>
+        <div class="results-header">
+            <div class="results-count">
+                <span id="expCount">0</span> experiences found
+            </div>
+        </div>
 
         <section>
-            <div id="studentExperienceLoading" class="loading-state">Loading interview experiences...</div>
-            <div id="studentExperienceList" class="student-experience-grid"></div>
-            <div id="studentExperienceEmpty" class="experience-empty-state hidden">
-                No interview experiences are available right now.
+            <div id="studentExperienceLoading" class="empty-state loading-state">
+                <i data-lucide="messages-square"></i>
+                <h3>Loading interview experiences...</h3>
+                <p>Please wait while we fetch experience records.</p>
+            </div>
+
+            <div class="cards-grid" id="expGrid"></div>
+
+            <div id="studentExperienceEmpty" class="empty-state hidden">
+                <i data-lucide="messages-square"></i>
+                <h3>No experiences found</h3>
+                <p>Try adjusting your search filters.</p>
             </div>
         </section>
     </main>
-</div>
 
-<script src="/js/auth.js"></script>
-<script src="/js/student-interview-experiences.js"></script>
+    <div class="modal-overlay" id="expModal">
+        <div class="modal-content">
+            <button class="close-modal" id="closeModal" type="button" aria-label="Close interview experience modal">
+                <i data-lucide="x"></i>
+            </button>
+
+            <div class="modal-header">
+                <h2 id="modalCompany">Company Name</h2>
+                <p id="modalStudent">Student Name</p>
+            </div>
+
+            <div class="modal-body">
+                <div class="qa-section">
+                    <h4><i data-lucide="message-square"></i> Questions Asked</h4>
+                    <p id="m-qs-asked">N/A</p>
+                </div>
+
+                <div class="qa-grid">
+                    <div class="qa-section">
+                        <h4><i data-lucide="code"></i> Coding Questions</h4>
+                        <p id="m-coding-qs">N/A</p>
+                    </div>
+                    <div class="qa-section">
+                        <h4><i data-lucide="cpu"></i> Technical Topics</h4>
+                        <p id="m-tech-topics">N/A</p>
+                    </div>
+                </div>
+
+                <div class="qa-section">
+                    <h4><i data-lucide="users"></i> HR Questions</h4>
+                    <p id="m-hr-qs">N/A</p>
+                </div>
+
+                <div class="qa-section highlight-section">
+                    <h4><i data-lucide="lightbulb"></i> Preparation Tips</h4>
+                    <p id="m-prep-tips">N/A</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/auth.js"></script>
+    <script src="/js/student-interview-experiences.js"></script>
 </body>
 </html>

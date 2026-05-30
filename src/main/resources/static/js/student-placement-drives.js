@@ -2,6 +2,15 @@
     const DRIVES_API = "/api/student/placement-drives";
     let allDrives = [];
 
+    function escapeHtml(value) {
+        return String(value == null ? "" : value)
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#39;");
+    }
+
     async function fetchDrives() {
         const response = await fetch(DRIVES_API);
         const payload = await response.json().catch(function () {
@@ -12,56 +21,112 @@
             throw new Error(payload && payload.message ? payload.message : "Unable to load placement drives.");
         }
 
-        return payload;
+        return Array.isArray(payload) ? payload : [];
     }
 
-    function escapeHtml(value) {
-        return String(value)
-            .replace(/&/g, "&amp;")
-            .replace(/</g, "&lt;")
-            .replace(/>/g, "&gt;")
-            .replace(/"/g, "&quot;")
-            .replace(/'/g, "&#39;");
+    function safeText(value, fallback) {
+        const normalized = String(value == null ? "" : value).trim();
+        return normalized || fallback;
+    }
+
+    function safeNumber(value, fallback) {
+        const numberValue = Number(value);
+        if (!Number.isFinite(numberValue)) {
+            return fallback;
+        }
+
+        return String(numberValue);
     }
 
     function formatDate(dateString) {
         if (!dateString) {
-            return "";
+            return "N/A";
         }
-        return new Date(dateString).toLocaleDateString("en-IN", {
+
+        const date = new Date(dateString);
+        if (Number.isNaN(date.getTime())) {
+            return "N/A";
+        }
+
+        return date.toLocaleDateString("en-IN", {
             year: "numeric",
             month: "short",
             day: "numeric"
         });
     }
 
-    function getLogoMarkup(drive) {
-        if (drive.companyLogoUrl) {
-            return '<img class="student-drive-logo" src="' + escapeHtml(drive.companyLogoUrl) + '" alt="' + escapeHtml(drive.companyName) + ' logo">';
+    function formatJobType(jobType) {
+        const normalized = safeText(jobType, "N/A");
+        if (normalized.toLowerCase() === "full time") {
+            return "Full-Time";
         }
-        return '<div class="student-drive-logo"></div>';
+        return normalized;
     }
 
     function getStatusClass(status) {
-        const normalized = (status || "").toLowerCase();
-        if (normalized === "upcoming") {
-            return "status-upcoming";
+        const normalized = safeText(status, "Closed").toLowerCase();
+        if (normalized === "upcoming") return "badge";
+        if (normalized === "ongoing") return "badge";
+        if (normalized === "completed") return "badge";
+        return "badge";
+    }
+
+    function getStatusDotClass(status) {
+        const normalized = safeText(status, "Closed").toLowerCase();
+        if (normalized === "completed") return "dot-green";
+        if (normalized === "ongoing") return "dot-blue";
+        if (normalized === "upcoming") return "dot-blue";
+        return "dot-gray";
+    }
+
+    function getLogoMarkup(drive) {
+        const companyName = safeText(drive.companyName, "Company");
+
+        if (drive.companyLogoUrl) {
+            return [
+                '<div class="company-logo">',
+                '<img src="', escapeHtml(drive.companyLogoUrl), '" alt="', escapeHtml(companyName), ' logo">',
+                '</div>'
+            ].join("");
         }
-        if (normalized === "ongoing") {
-            return "status-ongoing";
-        }
-        if (normalized === "completed") {
-            return "status-completed";
-        }
-        return "status-closed";
+
+        return [
+            '<div class="company-logo text-logo">',
+            "<span>", escapeHtml(companyName.charAt(0).toUpperCase()), "</span>",
+            "</div>"
+        ].join("");
+    }
+
+    function buildDetailItem(icon, label, value) {
+        return [
+            '<div class="detail-item">',
+            '<i data-lucide="', icon, '"></i> ',
+            escapeHtml(label), ": ", escapeHtml(value),
+            "</div>"
+        ].join("");
+    }
+
+    function buildTimelineStep(label, value) {
+        return [
+            '<div class="timeline-step">',
+            '<span class="step-label">', escapeHtml(label), "</span>",
+            '<span class="step-date">', escapeHtml(value), "</span>",
+            "</div>"
+        ].join("");
     }
 
     function populateYearFilter(drives) {
         const yearFilter = document.getElementById("driveYearFilter");
-        const years = Array.from(new Set(drives.map(function (drive) {
-            return drive.hiringYear;
-        }))).sort(function (first, second) {
-            return second - first;
+        if (!yearFilter) return;
+
+        const years = Array.from(
+            new Set(
+                drives
+                    .map(function (drive) { return drive.hiringYear; })
+                    .filter(Boolean)
+            )
+        ).sort(function (first, second) {
+            return Number(second) - Number(first);
         });
 
         yearFilter.innerHTML = '<option value="">All Hiring Years</option>';
@@ -73,6 +138,44 @@
         });
     }
 
+    function populateJobTypeFilter(drives) {
+        const jobTypeFilter = document.getElementById("driveJobTypeFilter");
+        if (!jobTypeFilter) return;
+
+        const jobTypes = Array.from(
+            new Set(
+                drives
+                    .map(function (drive) { return formatJobType(drive.jobType); })
+                    .filter(Boolean)
+            )
+        );
+
+        jobTypeFilter.innerHTML = '<option value="">All Job Types</option>';
+        jobTypes.forEach(function (jobType) {
+            const option = document.createElement("option");
+            option.value = jobType;
+            option.textContent = jobType;
+            jobTypeFilter.appendChild(option);
+        });
+    }
+
+    function updateDriveCount(count) {
+        const driveCount = document.getElementById("driveCount");
+        if (driveCount) {
+            driveCount.textContent = String(count);
+        }
+    }
+
+    function buildCardSearchText(drive) {
+        return [
+            safeText(drive.companyName, ""),
+            safeText(drive.driveTitle, ""),
+            safeText(drive.hiringYear, ""),
+            safeText(drive.driveStatus, ""),
+            safeText(drive.jobType, "")
+        ].join(" ").toLowerCase();
+    }
+
     function filterDrives() {
         const searchValue = document.getElementById("driveSearchInput").value.trim().toLowerCase();
         const yearValue = document.getElementById("driveYearFilter").value;
@@ -80,12 +183,10 @@
         const jobTypeValue = document.getElementById("driveJobTypeFilter").value;
 
         const filteredDrives = allDrives.filter(function (drive) {
-            const matchesSearch = !searchValue
-                || drive.companyName.toLowerCase().includes(searchValue)
-                || drive.driveTitle.toLowerCase().includes(searchValue);
-            const matchesYear = !yearValue || String(drive.hiringYear) === yearValue;
-            const matchesStatus = !statusValue || drive.driveStatus === statusValue;
-            const matchesJobType = !jobTypeValue || drive.jobType === jobTypeValue;
+            const matchesSearch = !searchValue || buildCardSearchText(drive).includes(searchValue);
+            const matchesYear = !yearValue || String(drive.hiringYear || "") === yearValue;
+            const matchesStatus = !statusValue || safeText(drive.driveStatus, "Closed") === statusValue;
+            const matchesJobType = !jobTypeValue || formatJobType(drive.jobType) === jobTypeValue;
 
             return matchesSearch && matchesYear && matchesStatus && matchesJobType;
         });
@@ -98,78 +199,216 @@
         const list = document.getElementById("studentDriveList");
         const emptyState = document.getElementById("studentDriveEmpty");
 
-        loadingElement.classList.add("hidden");
-        list.innerHTML = "";
-
-        if (!drives.length) {
-            emptyState.classList.remove("hidden");
+        if (loadingElement) {
+            loadingElement.classList.add("hidden");
+        }
+        if (!list) {
             return;
         }
 
-        emptyState.classList.add("hidden");
+        list.innerHTML = "";
+        updateDriveCount(drives.length);
+
+        if (!drives.length) {
+            if (emptyState) {
+                emptyState.classList.remove("hidden");
+            }
+            if (window.lucide && typeof window.lucide.createIcons === "function") {
+                window.lucide.createIcons();
+            }
+            return;
+        }
+
+        if (emptyState) {
+            emptyState.classList.add("hidden");
+        }
 
         drives.forEach(function (drive) {
             const websiteMarkup = drive.companyWebsiteUrl
-                ? '<a class="primary-btn company-website-btn" href="' + escapeHtml(drive.companyWebsiteUrl) + '" target="_blank" rel="noopener noreferrer">Visit Website</a>'
-                : "";
+                ? [
+                    '<a class="btn-primary" href="', escapeHtml(drive.companyWebsiteUrl), '" target="_blank" rel="noopener noreferrer">',
+                    'Visit Website <i data-lucide="external-link"></i>',
+                    "</a>"
+                ].join("")
+                : '<span class="btn-primary" aria-disabled="true">Visit Website <i data-lucide="external-link"></i></span>';
 
             const card = document.createElement("article");
-            card.className = "student-drive-card";
+            card.className = "card";
             card.innerHTML = [
-                '<div class="student-drive-header">',
+                '<div class="card-header">',
+                '<div class="company-info">',
                 getLogoMarkup(drive),
-                "<div>",
-                "<h3>" + escapeHtml(drive.driveTitle) + "</h3>",
-                "<p>" + escapeHtml(drive.companyName) + " | Hiring Year " + escapeHtml(drive.hiringYear) + "</p>",
+                '<div class="company-titles">',
+                "<h3>", escapeHtml(safeText(drive.driveTitle, "Untitled Drive")), "</h3>",
+                "<p>", escapeHtml(safeText(drive.companyName, "Company")), " &bull; Hiring Year ", escapeHtml(safeText(drive.hiringYear, "N/A")), "</p>",
                 "</div>",
                 "</div>",
-                '<div class="student-drive-badges">',
-                '<span class="status-badge ' + getStatusClass(drive.driveStatus) + '">' + escapeHtml(drive.driveStatus) + "</span>",
-                '<span class="mode-badge">' + escapeHtml(drive.hiringMode) + "</span>",
-                '<span class="job-badge">' + escapeHtml(drive.jobType) + "</span>",
                 "</div>",
-                '<div class="student-drive-meta">',
-                "<span>Hiring Date: " + formatDate(drive.hiringDate) + "</span>",
-                (drive.hiringLocation ? "<span>Location: " + escapeHtml(drive.hiringLocation) + "</span>" : ""),
-                "<span>Eligible Branches: " + escapeHtml(drive.eligibleBranches) + "</span>",
-                "<span>Eligible CGPA: " + escapeHtml(drive.eligibleCgpa) + "</span>",
-                "<span>Backlogs Allowed: " + (drive.backlogsAllowed ? "Yes" : "No") + "</span>",
-                (drive.backlogsAllowed && drive.maxBacklogs !== null ? "<span>Max Backlogs: " + escapeHtml(drive.maxBacklogs) + "</span>" : ""),
-                "<span>CTC: " + escapeHtml(drive.ctcPackage) + "</span>",
-                (drive.stipend ? "<span>Stipend: " + escapeHtml(drive.stipend) + "</span>" : ""),
-                (drive.numberOfRounds !== null ? "<span>Rounds: " + escapeHtml(drive.numberOfRounds) + "</span>" : ""),
-                (drive.roundNames ? "<span>Round Names: " + escapeHtml(drive.roundNames) + "</span>" : ""),
-                (drive.registrationDeadline ? "<span>Registration Deadline: " + formatDate(drive.registrationDeadline) + "</span>" : ""),
-                (drive.examDate ? "<span>Exam Date: " + formatDate(drive.examDate) + "</span>" : ""),
-                (drive.interviewDate ? "<span>Interview Date: " + formatDate(drive.interviewDate) + "</span>" : ""),
+
+                '<div class="card-badges">',
+                '<span class="', getStatusClass(drive.driveStatus), '">', escapeHtml(safeText(drive.driveStatus, "Closed")), "</span>",
+                '<span class="badge">', escapeHtml(safeText(drive.hiringMode, "N/A")), "</span>",
+                '<span class="badge">', escapeHtml(formatJobType(drive.jobType)), "</span>",
                 "</div>",
-                (drive.description ? "<p>" + escapeHtml(drive.description).replace(/\n/g, "<br>") + "</p>" : ""),
-                websiteMarkup
+
+                '<div class="card-details-grid">',
+                buildDetailItem("calendar", "Hiring Date", formatDate(drive.hiringDate)),
+                buildDetailItem("map-pin", "Location", safeText(drive.hiringLocation, "N/A")),
+                buildDetailItem("graduation-cap", "Branches", safeText(drive.eligibleBranches, "N/A")),
+                buildDetailItem("pen-tool", "CGPA", safeText(drive.eligibleCgpa, "N/A")),
+                buildDetailItem("clock", "Backlogs", drive.backlogsAllowed ? "Allowed" : "Not Allowed"),
+                buildDetailItem("dollar-sign", "CTC", safeText(drive.ctcPackage, "N/A")),
+                buildDetailItem("briefcase", "Stipend", safeText(drive.stipend, "N/A")),
+                buildDetailItem("layers", "Rounds", safeText(drive.roundNames, drive.numberOfRounds != null ? safeNumber(drive.numberOfRounds, "0") : "N/A")),
+                "</div>",
+
+                '<div class="card-timeline">',
+                buildTimelineStep("REGISTRATION", formatDate(drive.registrationDeadline)),
+                '<i data-lucide="arrow-right" class="timeline-arrow"></i>',
+                buildTimelineStep("EXAM", formatDate(drive.examDate)),
+                '<i data-lucide="arrow-right" class="timeline-arrow"></i>',
+                buildTimelineStep("INTERVIEW", formatDate(drive.interviewDate)),
+                "</div>",
+
+                '<div class="card-footer">',
+                websiteMarkup,
+                '<div class="status-dot ', getStatusDotClass(drive.driveStatus), '"></div>',
+                "</div>"
             ].join("");
+
+            card.addEventListener("mousedown", function (event) {
+                addRipple(event, card);
+            });
+
             list.appendChild(card);
         });
+
+        initCardObserver();
+
+        if (window.lucide && typeof window.lucide.createIcons === "function") {
+            window.lucide.createIcons();
+        }
     }
 
     function showError(message) {
         const loadingElement = document.getElementById("studentDrivesLoading");
         const emptyState = document.getElementById("studentDriveEmpty");
 
-        loadingElement.classList.add("hidden");
-        emptyState.textContent = message;
-        emptyState.classList.remove("hidden");
+        if (loadingElement) {
+            loadingElement.classList.add("hidden");
+        }
+        if (emptyState) {
+            emptyState.innerHTML = [
+                '<i data-lucide="briefcase"></i>',
+                "<h3>No drives found</h3>",
+                "<p>", escapeHtml(message || "Unable to load placement drives right now."), "</p>"
+            ].join("");
+            emptyState.classList.remove("hidden");
+        }
+
+        updateDriveCount(0);
+
+        if (window.lucide && typeof window.lucide.createIcons === "function") {
+            window.lucide.createIcons();
+        }
     }
 
     function setupFilters() {
         ["driveSearchInput", "driveYearFilter", "driveStatusFilter", "driveJobTypeFilter"].forEach(function (id) {
-            document.getElementById(id).addEventListener("input", filterDrives);
-            document.getElementById(id).addEventListener("change", filterDrives);
+            const element = document.getElementById(id);
+            if (!element) return;
+
+            element.addEventListener("input", filterDrives);
+            element.addEventListener("change", filterDrives);
         });
     }
 
+    function addRipple(event, element) {
+        const ripple = document.createElement("span");
+        ripple.className = "ripple";
+
+        const rect = element.getBoundingClientRect();
+        const size = Math.max(rect.width, rect.height);
+
+        ripple.style.width = size + "px";
+        ripple.style.height = size + "px";
+        ripple.style.left = event.clientX - rect.left - size / 2 + "px";
+        ripple.style.top = event.clientY - rect.top - size / 2 + "px";
+
+        element.appendChild(ripple);
+        ripple.addEventListener("animationend", function () {
+            ripple.remove();
+        });
+    }
+
+    function initScrollProgress() {
+        const progress = document.getElementById("scrollProgress");
+        if (!progress) return;
+
+        window.addEventListener("scroll", function () {
+            const scrolled = document.documentElement.scrollTop;
+            const max = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+            progress.style.width = max > 0 ? Math.round((scrolled / max) * 100) + "%" : "0%";
+        }, { passive: true });
+    }
+
+    let cardObserver = null;
+
+    function initCardObserver() {
+        const cards = document.querySelectorAll(".card");
+
+        if (!("IntersectionObserver" in window)) {
+            cards.forEach(function (card) {
+                card.classList.add("visible");
+            });
+            return;
+        }
+
+        if (!cardObserver) {
+            cardObserver = new IntersectionObserver(function (entries) {
+                entries.forEach(function (entry) {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add("visible");
+                    } else {
+                        entry.target.classList.remove("visible");
+                    }
+                });
+            }, {
+                threshold: 0.05,
+                rootMargin: "0px 0px -30px 0px"
+            });
+        }
+
+        cards.forEach(function (card) {
+            cardObserver.observe(card);
+        });
+    }
+
+    function setupBackButton() {
+        const backBtn = document.getElementById("placementDrivesBackBtn");
+        if (!backBtn) return;
+
+        const params = new URLSearchParams(window.location.search);
+        if (params.get("from") === "dashboard-placement-drives-card") {
+            backBtn.href = "/student-dashboard#placement-drives-card";
+        }
+    }
+
+    function initLucideIcons() {
+        if (window.lucide && typeof window.lucide.createIcons === "function") {
+            window.lucide.createIcons();
+        }
+    }
+
     document.addEventListener("DOMContentLoaded", async function () {
+        initLucideIcons();
+        initScrollProgress();
+        setupBackButton();
+
         try {
             allDrives = await fetchDrives();
             populateYearFilter(allDrives);
+            populateJobTypeFilter(allDrives);
             setupFilters();
             renderDrives(allDrives);
         } catch (error) {

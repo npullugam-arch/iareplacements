@@ -6,80 +6,69 @@
     <title>Student Placement Drives | IARE AI Placement Portal</title>
     <link rel="stylesheet" href="/css/style.css">
     <link rel="stylesheet" href="/css/student-placement-drives.css">
+    <script src="https://unpkg.com/lucide@0.294.0/dist/umd/lucide.min.js" crossorigin="anonymous"></script>
 </head>
-<body class="dashboard-body student-theme" data-portal-role="student">
-<div class="dashboard-shell">
-    <aside class="sidebar">
-        <div>
-            <div class="brand-block">
-                <span class="brand-chip">IARE AI Placement Portal</span>
-                <h2>Student Hub</h2>
-                <p>Explore active placement drives</p>
-            </div>
+<body class="student-placement-drives-page" data-portal-role="student">
+    <div class="scroll-progress" id="scrollProgress"></div>
 
-            <nav class="sidebar-nav">
-                <a href="/student-dashboard">Dashboard</a>
-                <a href="/student-placement-drives" class="active">Placement Drives</a>
-                <a href="/student-companies">Companies</a>
-                <a href="/student-notices">Notices</a>
-                <a href="/student-dashboard#mock">Mock Interview</a>
-                <a href="/student-dashboard#roadmap">Preparation Roadmap</a>
-            </nav>
-        </div>
-
-        <button class="ghost-btn logout-trigger" data-logout-role="student">Logout</button>
-    </aside>
-
-    <main class="dashboard-content">
-        <header class="topbar">
-            <div>
-                <p class="eyebrow">Placement Drives</p>
-                <h1>Track open hiring opportunities</h1>
-            </div>
-            <div class="topbar-actions">
-                <a class="secondary-btn" href="/student-dashboard">Back to Dashboard</a>
+    <main class="statistics-main">
+        <header class="statistics-page-header">
+            <a class="back-btn" id="placementDrivesBackBtn" href="/student-dashboard">
+                <i data-lucide="arrow-left"></i>
+                <span>Back</span>
+            </a>
+            <div class="header-title-block">
+                <h1>PLACEMENT DRIVES</h1>
             </div>
         </header>
 
-        <section class="student-drives-hero">
-            <div>
-                <span class="card-tag">Opportunity Feed</span>
-                <h2>View every active drive separately, even for repeat recruiters.</h2>
-                <p>Search by company or drive title and filter by hiring year, status, or job type.</p>
+        <section class="controls-section">
+            <div class="search-bar-container">
+                <i data-lucide="search" class="search-icon"></i>
+                <input id="driveSearchInput" type="text" placeholder="Search by company name or drive title...">
+            </div>
+
+            <div class="filters-row">
+                <div class="select-wrap">
+                    <select id="driveYearFilter">
+                        <option value="">All Hiring Years</option>
+                    </select>
+                </div>
+                <div class="select-wrap">
+                    <select id="driveStatusFilter">
+                        <option value="">All Statuses</option>
+                        <option value="Upcoming">Upcoming</option>
+                        <option value="Ongoing">Ongoing</option>
+                        <option value="Completed">Completed</option>
+                        <option value="Closed">Closed</option>
+                    </select>
+                </div>
+                <div class="select-wrap">
+                    <select id="driveJobTypeFilter">
+                        <option value="">All Job Types</option>
+                    </select>
+                </div>
             </div>
         </section>
 
-        <section class="drive-filters">
-            <input id="driveSearchInput" type="text" placeholder="Search by company name or drive title">
-            <select id="driveYearFilter">
-                <option value="">All Hiring Years</option>
-            </select>
-            <select id="driveStatusFilter">
-                <option value="">All Statuses</option>
-                <option>Upcoming</option>
-                <option>Ongoing</option>
-                <option>Completed</option>
-                <option>Closed</option>
-            </select>
-            <select id="driveJobTypeFilter">
-                <option value="">All Job Types</option>
-                <option>Internship</option>
-                <option>Full Time</option>
-                <option>Internship + Full Time</option>
-            </select>
-        </section>
+        <div class="results-header">
+            <div class="results-count">
+                <span id="driveCount">0</span> drives found
+            </div>
+        </div>
 
         <section>
             <div id="studentDrivesLoading" class="loading-state">Loading placement drives...</div>
-            <div id="studentDriveList" class="student-drive-grid"></div>
-            <div id="studentDriveEmpty" class="drive-empty-state hidden">
-                No placement drives are available right now. Please check again later.
+            <div id="studentDriveList" class="cards-grid"></div>
+            <div id="studentDriveEmpty" class="empty-state hidden">
+                <i data-lucide="briefcase"></i>
+                <h3>No drives found</h3>
+                <p>Try adjusting your search filters.</p>
             </div>
         </section>
     </main>
-</div>
 
-<script src="/js/auth.js"></script>
-<script src="/js/student-placement-drives.js"></script>
+    <script src="/js/auth.js"></script>
+    <script src="/js/student-placement-drives.js"></script>
 </body>
 </html>

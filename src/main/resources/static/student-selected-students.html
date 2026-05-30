@@ -3,84 +3,106 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Student Selected Students | IARE AI Placement Portal</title>
+    <title>Selected Students | IARE AI Placement Portal</title>
     <link rel="stylesheet" href="/css/style.css">
     <link rel="stylesheet" href="/css/student-selected-students.css">
+    <script src="https://unpkg.com/lucide@latest"></script>
 </head>
-<body class="dashboard-body student-theme" data-portal-role="student">
-<div class="dashboard-shell">
-    <aside class="sidebar">
-        <div>
-            <div class="brand-block">
-                <span class="brand-chip">IARE AI Placement Portal</span>
-                <h2>Student Hub</h2>
-                <p>Explore selected student records</p>
-            </div>
+<body class="student-selected-students-page" data-portal-role="student">
+    <div class="scroll-progress" id="scrollProgress"></div>
 
-            <nav class="sidebar-nav">
-                <a href="/student-dashboard">Dashboard</a>
-                <a href="/student-selected-students" class="active">Selected Students</a>
-                <a href="/student-placement-statistics">Placement Statistics</a>
-                <a href="/student-placement-drives">Placement Drives</a>
-                <a href="/student-companies">Companies</a>
-            </nav>
-        </div>
-
-        <button class="ghost-btn logout-trigger" data-logout-role="student">Logout</button>
-    </aside>
-
-    <main class="dashboard-content">
-        <header class="topbar">
-            <div>
-                <p class="eyebrow">Selected Students</p>
-                <h1>Celebrate placement achievements</h1>
-            </div>
-            <div class="topbar-actions">
-                <a class="secondary-btn" href="/student-dashboard">Back to Dashboard</a>
+    <main class="main" role="main">
+        <header class="statistics-page-header">
+            <a class="back-btn" id="selectedStudentsBackBtn" href="/student-dashboard">
+                <i data-lucide="arrow-left"></i>
+                <span>Back</span>
+            </a>
+            <div class="header-title-block">
+                <h1>SELECTED STUDENTS</h1>
             </div>
         </header>
 
-        <section class="student-selected-hero">
-            <div>
-                <span class="card-tag">Success Stories</span>
-                <h2>Browse selected student records across placement drives.</h2>
-                <p>Search by student, company, or drive and filter by branch, section, gender, or offer type.</p>
+        <section class="notice-section filters-section" aria-label="Student Filters">
+            <div class="filters-container">
+                <div class="search-wrap">
+                    <i data-lucide="search" class="search-icon"></i>
+                    <input type="text" id="searchInput" placeholder="Search by name, roll no, or company...">
+                </div>
+                <div class="select-wrap">
+                    <select id="branchFilter">
+                        <option value="">All Branches</option>
+                    </select>
+                </div>
+                <div class="select-wrap">
+                    <select id="sectionFilter">
+                        <option value="">All Sections</option>
+                    </select>
+                </div>
+                <div class="select-wrap">
+                    <select id="companyFilter">
+                        <option value="">All Companies</option>
+                    </select>
+                </div>
             </div>
         </section>
 
-        <section class="selected-filters">
-            <input id="selectedSearchInput" type="text" placeholder="Search by student name, roll number, company, or drive title">
-            <select id="selectedDriveFilter">
-                <option value="">All Placement Drives</option>
-            </select>
-            <select id="selectedBranchFilter">
-                <option value="">All Branches</option>
-            </select>
-            <select id="selectedSectionFilter">
-                <option value="">All Sections</option>
-            </select>
-            <select id="selectedGenderFilter">
-                <option value="">All Genders</option>
-            </select>
-            <select id="selectedOfferTypeFilter">
-                <option value="">All Offer Types</option>
-                <option>Internship</option>
-                <option>Full Time</option>
-                <option>Internship + Full Time</option>
-            </select>
-        </section>
+        <section class="cards-section" aria-label="Student Results">
+            <div id="studentSelectedStudentsLoading" class="empty-state loading-state">
+                <i data-lucide="users-round"></i>
+                <h3>Loading selected students...</h3>
+                <p>Please wait while we fetch placement records.</p>
+            </div>
 
-        <section>
-            <div id="studentSelectedStudentsLoading" class="loading-state">Loading selected student records...</div>
-            <div id="studentSelectedStudentsList" class="student-selected-grid"></div>
-            <div id="studentSelectedStudentsEmpty" class="selected-empty-state hidden">
-                No selected student records are available right now.
+            <div class="cards-grid" id="studentsGrid"></div>
+
+            <div id="emptyState" class="empty-state hidden">
+                <i data-lucide="users-round"></i>
+                <h3>No students found</h3>
+                <p>Try adjusting your search or filters to find what you're looking for.</p>
             </div>
         </section>
     </main>
-</div>
 
-<script src="/js/auth.js"></script>
-<script src="/js/student-selected-students.js"></script>
+    <div class="modal-overlay" id="studentModal">
+        <div class="modal-content">
+            <button class="modal-close" id="modalClose" type="button" aria-label="Close selected student modal">
+                <i data-lucide="x"></i>
+            </button>
+            <div class="modal-header">
+                <div class="modal-img">
+                    <img id="modalImg" src="" alt="Student">
+                </div>
+                <div class="modal-title">
+                    <h2 id="modalName">Name</h2>
+                    <p id="modalRoll">Roll No</p>
+                </div>
+            </div>
+            <div class="modal-details">
+                <div class="detail-row">
+                    <span class="detail-label">Company</span>
+                    <span class="detail-value" id="modalCompany">N/A</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Branch</span>
+                    <span class="detail-value" id="modalBranch">N/A</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Section</span>
+                    <span class="detail-value" id="modalSection">N/A</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Package</span>
+                    <span class="detail-value" id="modalPackage">N/A</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Selected Date</span>
+                    <span class="detail-value" id="modalDate">N/A</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/auth.js"></script>
+    <script src="/js/student-selected-students.js"></script>
 </body>
 </html>
