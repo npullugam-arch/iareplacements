@@ -6,7 +6,6 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Index;
-import jakarta.persistence.Lob;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
@@ -46,8 +45,7 @@ public class Company {
 
     private Integer foundedYear;
 
-    @Lob
-    @Column(nullable = false)
+   @Column(columnDefinition = "TEXT", nullable = false)
     private String description;
 
     @Column(nullable = false)

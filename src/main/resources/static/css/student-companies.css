@@ -207,6 +207,46 @@ body.student-companies-page::after {
     flex-wrap: wrap;
 }
 
+.inline-loading-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    min-width: 44px;
+    height: 36px;
+    padding: 0 0.65rem;
+    border-radius: 9999px;
+    background: rgba(255, 255, 255, 0.8);
+    border: 1px solid #e5e5e5;
+}
+
+.inline-loading-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #a3a3a3;
+    animation: inlineLoadingPulse 0.9s ease-in-out infinite;
+}
+
+.inline-loading-dot:nth-child(2) {
+    animation-delay: 0.15s;
+}
+
+.inline-loading-dot:nth-child(3) {
+    animation-delay: 0.3s;
+}
+
+@keyframes inlineLoadingPulse {
+    0%, 100% {
+        opacity: 0.35;
+        transform: translateY(0);
+    }
+
+    50% {
+        opacity: 1;
+        transform: translateY(-2px);
+    }
+}
+
 .pagination-btn {
     border: 1px solid #d4d4d4;
     background: #ffffff;
@@ -234,13 +274,6 @@ body.student-companies-page::after {
     font-weight: 600;
 }
 
-.page-loading-hint {
-    margin: -0.25rem 0 1rem;
-    color: #737373;
-    font-size: 0.92rem;
-    font-weight: 600;
-}
-
 .company-card {
     background: #ffffff;
     border: 1px solid #e5e5e5;
@@ -255,31 +288,6 @@ body.student-companies-page::after {
     opacity: 0;
     transform: translateY(30px);
     transition: opacity 0.6s ease-out, transform 0.6s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease, border-color 0.3s ease;
-}
-
-.loading-skeleton-grid {
-    margin-bottom: 1.5rem;
-}
-
-.company-card-skeleton {
-    min-height: 290px;
-    opacity: 1;
-    transform: none;
-    border-color: #ececec;
-    background:
-        linear-gradient(90deg, rgba(244, 244, 244, 0.9) 25%, rgba(229, 229, 229, 0.95) 50%, rgba(244, 244, 244, 0.9) 75%);
-    background-size: 220% 100%;
-    animation: skeletonPulse 1.2s ease-in-out infinite;
-}
-
-@keyframes skeletonPulse {
-    0% {
-        background-position: 100% 0;
-    }
-
-    100% {
-        background-position: -100% 0;
-    }
 }
 
 .company-card.visible {
@@ -301,31 +309,41 @@ body.student-companies-page::after {
     align-items: flex-start;
 }
 
-.company-logo {
-    width: 60px;
-    height: 60px;
-    border-radius: 12px;
+.company-logo-wrapper {
+    width: 140px;
+    height: 140px;
+    border-radius: 16px;
     border: 1px solid #e5e5e5;
     background: #ffffff;
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 6px;
     flex-shrink: 0;
     overflow: hidden;
 }
 
-.company-logo img {
-    max-width: 100%;
-    max-height: 100%;
+.company-logo {
+    width: 100%;
+    height: 100%;
     object-fit: contain;
+    display: block;
 }
 
-.company-logo.text-logo {
+.company-logo-fallback {
+    width: 100%;
+    height: 100%;
+    background: #f4f4f4;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.company-logo-fallback-letter {
     background: #f4f4f4;
     font-size: 1.75rem;
     font-weight: 700;
     color: #0a0a0a;
+    line-height: 1;
 }
 
 .company-titles {
@@ -502,16 +520,156 @@ body.student-companies-page::after {
     .back-btn {
         align-self: center;
     }
+
+    .company-logo-wrapper {
+        width: 112px;
+        height: 112px;
+    }
 }
 
 @media (max-width: 650px) {
     .cards-grid {
         grid-template-columns: 1fr;
     }
+
+    .company-logo-wrapper {
+        width: 96px;
+        height: 96px;
+    }
 }
 
 @media (max-width: 500px) {
     .filters-row {
         grid-template-columns: 1fr;
+    }
+}/* ── SKELETON GRID ── */
+.loading-skeleton-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+/* ── SKELETON CARD ── */
+.company-card-skeleton {
+    background-color: #ffffff !important;
+    background-image: none !important;
+    border: 1px solid #e8e8e8 !important;
+    border-radius: 16px !important;
+    padding: 24px !important;
+    min-height: 290px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 16px !important;
+    transform: none !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04) !important;
+    animation: none !important;
+    opacity: 1 !important;
+}
+
+/* ── SHIMMER KEYFRAME ── */
+@keyframes shimmer {
+    0%   { background-position: -600px 0; }
+    100% { background-position:  600px 0; }
+}
+
+/* ── LOGO BLOCK (::before) ── */
+.company-card-skeleton::before {
+    content: '' !important;
+    display: block !important;
+    width: 52px !important;
+    height: 52px !important;
+    border-radius: 10px !important;
+    flex-shrink: 0 !important;
+    background-color: #ebebeb !important;
+    background-image: linear-gradient(
+        90deg,
+        #ebebeb 0%,
+        #d8d8d8 45%,
+        #ebebeb 100%
+    ) !important;
+    background-size: 600px 100% !important;
+    animation: shimmer 2.2s ease-in-out infinite !important;
+}
+
+/* ── LINES BLOCK (::after) ── */
+.company-card-skeleton::after {
+    content: '' !important;
+    display: block !important;
+    flex: 1 !important;
+    min-height: 190px !important;
+    background-image:
+        linear-gradient(#ebebeb 13px, transparent 13px),
+        linear-gradient(#ebebeb 10px, transparent 10px),
+        linear-gradient(#ebebeb 10px, transparent 10px),
+        linear-gradient(#ebebeb 10px, transparent 10px),
+        linear-gradient(#ebebeb 10px, transparent 10px),
+        linear-gradient(#ebebeb 22px, transparent 22px),
+        linear-gradient(#ebebeb 22px, transparent 22px) !important;
+    background-size:
+        78%  13px,
+        48%  10px,
+        100% 10px,
+        100% 10px,
+        62%  10px,
+        60px 22px,
+        76px 22px !important;
+    background-position:
+        0    0px,
+        0    24px,
+        0    66px,
+        0    84px,
+        0    102px,
+        0    148px,
+        70px 148px !important;
+    background-repeat: no-repeat !important;
+}
+
+/* ── STAGGERED SHIMMER per card ── */
+.company-card-skeleton:nth-child(1)::before { animation-delay: 0s !important; }
+.company-card-skeleton:nth-child(2)::before { animation-delay: 0.4s !important; }
+.company-card-skeleton:nth-child(3)::before { animation-delay: 0.8s !important; }
+.company-card-skeleton:nth-child(4)::before { animation-delay: 0.2s !important; }
+.company-card-skeleton:nth-child(5)::before { animation-delay: 0.6s !important; }
+.company-card-skeleton:nth-child(6)::before { animation-delay: 1.0s !important; }
+
+/* ── SLOW FADE-IN FOR SEARCH BAR & HEADER ── */
+@keyframes smoothFadeUp {
+    from {
+        opacity: 0;
+        transform: translateY(16px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.slow-fade-in {
+    opacity: 0;
+    animation: smoothFadeUp 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.statistics-page-header.slow-fade-in { animation-delay: 0.1s; }
+.controls-section.slow-fade-in       { animation-delay: 0.35s; }
+.results-header.slow-fade-in         { animation-delay: 0.6s; }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 1100px) {
+    .loading-skeleton-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    .company-card-skeleton:nth-child(5),
+    .company-card-skeleton:nth-child(6) {
+        display: none !important;
+    }
+}
+
+@media (max-width: 650px) {
+    .loading-skeleton-grid {
+        grid-template-columns: 1fr;
+    }
+    .company-card-skeleton:nth-child(n+3) {
+        display: none !important;
     }
 }
