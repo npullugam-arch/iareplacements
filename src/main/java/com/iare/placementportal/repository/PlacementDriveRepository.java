@@ -75,4 +75,39 @@ public interface PlacementDriveRepository extends JpaRepository<PlacementDrive, 
             order by pd.jobType asc
             """)
     List<String> findDistinctActiveJobTypes();
+
+    @Query("""
+            select count(distinct c.id)
+            from PlacementDrive pd
+            join pd.company c
+            where pd.active = true
+              and pd.hiringYear = :hiringYear
+            """)
+    long countDistinctActiveCompaniesByHiringYear(@Param("hiringYear") Integer hiringYear);
+
+    @Query("""
+            select distinct c.companyName
+            from PlacementDrive pd
+            join pd.company c
+            where pd.active = true
+              and pd.hiringYear = :hiringYear
+              and c.companyName is not null
+              and trim(c.companyName) <> ''
+            order by c.companyName asc
+            """)
+    List<String> findDistinctActiveCompanyNamesByHiringYear(@Param("hiringYear") Integer hiringYear);
+
+    @EntityGraph(attributePaths = "company")
+    @Query("""
+            select pd
+            from PlacementDrive pd
+            join pd.company c
+            where pd.active = true
+              and lower(c.companyName) = lower(:companyName)
+              and (:hiringYear is null or pd.hiringYear = :hiringYear)
+            order by pd.hiringDate desc, pd.id desc
+            """)
+    List<PlacementDrive> findActiveByCompanyName(@Param("companyName") String companyName,
+                                                 @Param("hiringYear") Integer hiringYear,
+                                                 Pageable pageable);
 }

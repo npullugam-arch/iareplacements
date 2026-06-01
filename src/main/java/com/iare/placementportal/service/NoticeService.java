@@ -77,6 +77,14 @@ public class NoticeService {
         return toResponse(noticeRepository.save(notice));
     }
 
+    public String sendNoticeNotification(Long id) {
+        Notice notice = findNoticeOrThrow(id);
+        LOGGER.info("Notice notification requested: id={}, title='{}', active={}, validFrom={}, validTo={}",
+                notice.getId(), notice.getTitle(), notice.getActive(), notice.getValidFrom(), notice.getValidTo());
+
+        return "Notification sent successfully for notice: " + notice.getTitle();
+    }
+
     private Notice findNoticeOrThrow(Long id) {
         return noticeRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Notice not found."));

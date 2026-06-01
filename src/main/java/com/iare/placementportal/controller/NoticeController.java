@@ -5,6 +5,7 @@ import com.iare.placementportal.dto.NoticeResponse;
 import com.iare.placementportal.service.NoticeService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -54,6 +55,11 @@ public class NoticeController {
     @PatchMapping("/api/admin/notices/{id}/status")
     public NoticeResponse changeNoticeStatus(@PathVariable Long id, @RequestParam boolean active) {
         return noticeService.changeNoticeActiveStatus(id, active);
+    }
+
+    @PostMapping("/api/admin/notices/{id}/notify")
+    public ResponseEntity<String> sendNoticeNotification(@PathVariable Long id) {
+        return ResponseEntity.ok(noticeService.sendNoticeNotification(id));
     }
 
     @GetMapping("/api/student/notices/active")

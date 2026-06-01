@@ -46,4 +46,37 @@ public interface PlacementStatisticsRepository extends JpaRepository<PlacementSt
             order by pd.hiringYear desc
             """)
     List<Integer> findDistinctActiveHiringYears();
+
+    @Query("""
+            select max(ps.highestPackage)
+            from PlacementStatistics ps
+            join ps.placementDrive pd
+            where ps.active = true
+              and pd.hiringYear = :hiringYear
+            """)
+    Double findHighestPackageByHiringYear(@Param("hiringYear") Integer hiringYear);
+
+    @Query("""
+            select avg(ps.averagePackage)
+            from PlacementStatistics ps
+            join ps.placementDrive pd
+            where ps.active = true
+              and pd.hiringYear = :hiringYear
+              and ps.averagePackage is not null
+            """)
+    Double findAveragePackageByHiringYear(@Param("hiringYear") Integer hiringYear);
+
+    @EntityGraph(attributePaths = {"placementDrive", "placementDrive.company"})
+    @Query("""
+            select ps from PlacementStatistics ps
+            join ps.placementDrive pd
+            join pd.company c
+            where ps.active = true
+              and lower(c.companyName) = lower(:companyName)
+              and (:hiringYear is null or pd.hiringYear = :hiringYear)
+            order by pd.hiringYear desc, ps.createdAt desc, ps.id desc
+            """)
+    List<PlacementStatistics> findActiveByCompanyName(@Param("companyName") String companyName,
+                                                      @Param("hiringYear") Integer hiringYear,
+                                                      Pageable pageable);
 }

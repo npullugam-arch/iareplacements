@@ -10,14 +10,14 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/ai")
 public class AiController {
 
-    private final OllamaAiService ollamaAiService;
+    private final AiChatService aiChatService;
 
-    public AiController(OllamaAiService ollamaAiService) {
-        this.ollamaAiService = ollamaAiService;
+    public AiController(AiChatService aiChatService) {
+        this.aiChatService = aiChatService;
     }
 
     @PostMapping("/chat")
     public AiChatResponse chat(@Valid @RequestBody AiChatRequest request) {
-        return ollamaAiService.chat(request.message());
+        return aiChatService.chat(request.message());
     }
 }

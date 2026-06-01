@@ -64,4 +64,33 @@ public interface SelectedStudentRepository extends JpaRepository<SelectedStudent
             order by c.companyName asc
             """)
     List<String> findDistinctActiveCompanyNames();
+
+    @EntityGraph(attributePaths = {"placementDrive", "placementDrive.company"})
+    @Query("""
+            select ss from SelectedStudent ss
+            join ss.placementDrive pd
+            join pd.company c
+            where ss.active = true
+              and lower(c.companyName) = lower(:companyName)
+              and (:year is null or pd.hiringYear = :year or ss.selectionYear = :year)
+              and (:branch = '' or lower(ss.branch) = lower(:branch))
+            order by ss.createdAt desc, ss.id desc
+            """)
+    List<SelectedStudent> findTopActiveByCompanyName(@Param("companyName") String companyName,
+                                                     @Param("year") Integer year,
+                                                     @Param("branch") String branch,
+                                                     Pageable pageable);
+
+    @Query("""
+            select count(ss) from SelectedStudent ss
+            join ss.placementDrive pd
+            join pd.company c
+            where ss.active = true
+              and lower(c.companyName) = lower(:companyName)
+              and (:year is null or pd.hiringYear = :year or ss.selectionYear = :year)
+              and (:branch = '' or lower(ss.branch) = lower(:branch))
+            """)
+    long countActiveByCompanyName(@Param("companyName") String companyName,
+                                  @Param("year") Integer year,
+                                  @Param("branch") String branch);
 }
