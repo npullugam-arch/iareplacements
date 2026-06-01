@@ -7,6 +7,9 @@ import com.iare.placementportal.entity.PlacementDrive;
 import com.iare.placementportal.entity.SelectedStudent;
 import com.iare.placementportal.repository.PlacementDriveRepository;
 import com.iare.placementportal.repository.SelectedStudentRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,6 +24,8 @@ import java.util.List;
 @Transactional
 public class SelectedStudentService {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(SelectedStudentService.class);
+
     private final SelectedStudentRepository selectedStudentRepository;
     private final PlacementDriveRepository placementDriveRepository;
 
@@ -31,6 +36,16 @@ public class SelectedStudentService {
     }
 
     public SelectedStudentResponse createSelectedStudent(SelectedStudentRequest request) {
+        LOGGER.info("Create selected student request received: placementDriveId={}, studentName='{}', rollNumber='{}', branch='{}', gender='{}', packageOffered='{}', offerType='{}', selectionYear={}, photoUrlPresent={}",
+                request.placementDriveId(),
+                request.studentName(),
+                request.rollNumber(),
+                request.branch(),
+                request.gender(),
+                request.packageOffered(),
+                request.offerType(),
+                request.selectionYear(),
+                normalizeOptional(request.photoUrl()) != null);
         validateRequest(request);
         PlacementDrive placementDrive = findDriveOrThrow(request.placementDriveId());
 
@@ -42,7 +57,7 @@ public class SelectedStudentService {
         SelectedStudent selectedStudent = new SelectedStudent();
         mapRequestToEntity(request, selectedStudent, placementDrive);
 
-        return toResponse(selectedStudentRepository.save(selectedStudent));
+        return saveSelectedStudent(selectedStudent, "create");
     }
 
     @Transactional(readOnly = true)
@@ -80,6 +95,17 @@ public class SelectedStudentService {
     }
 
     public SelectedStudentResponse updateSelectedStudent(Long id, SelectedStudentRequest request) {
+        LOGGER.info("Update selected student request received: id={}, placementDriveId={}, studentName='{}', rollNumber='{}', branch='{}', gender='{}', packageOffered='{}', offerType='{}', selectionYear={}, photoUrlPresent={}",
+                id,
+                request.placementDriveId(),
+                request.studentName(),
+                request.rollNumber(),
+                request.branch(),
+                request.gender(),
+                request.packageOffered(),
+                request.offerType(),
+                request.selectionYear(),
+                normalizeOptional(request.photoUrl()) != null);
         validateRequest(request);
 
         SelectedStudent selectedStudent = findSelectedStudentOrThrow(id);
@@ -95,7 +121,7 @@ public class SelectedStudentService {
         }
 
         mapRequestToEntity(request, selectedStudent, placementDrive);
-        return toResponse(selectedStudentRepository.save(selectedStudent));
+        return saveSelectedStudent(selectedStudent, "update");
     }
 
     public void deleteSelectedStudent(Long id) {
@@ -106,7 +132,7 @@ public class SelectedStudentService {
     public SelectedStudentResponse changeSelectedStudentActiveStatus(Long id, boolean active) {
         SelectedStudent selectedStudent = findSelectedStudentOrThrow(id);
         selectedStudent.setActive(active);
-        return toResponse(selectedStudentRepository.save(selectedStudent));
+        return saveSelectedStudent(selectedStudent, "status-change");
     }
 
     private PlacementDrive findDriveOrThrow(Long placementDriveId) {
@@ -163,12 +189,51 @@ public class SelectedStudentService {
         }
     }
 
+    private SelectedStudentResponse saveSelectedStudent(SelectedStudent selectedStudent, String operation) {
+        try {
+            SelectedStudent savedStudent = selectedStudentRepository.saveAndFlush(selectedStudent);
+            LOGGER.info("Selected student {} successful: id={}, rollNumber='{}', branch='{}', selectionYear={}, active={}",
+                    operation,
+                    savedStudent.getId(),
+                    savedStudent.getRollNumber(),
+                    savedStudent.getBranch(),
+                    savedStudent.getSelectionYear(),
+                    savedStudent.getActive());
+            return toResponse(savedStudent);
+        } catch (DataIntegrityViolationException exception) {
+            LOGGER.error("Selected student {} failed due to database constraint: placementDriveId={}, rollNumber='{}', branch='{}', selectionYear={}",
+                    operation,
+                    selectedStudent.getPlacementDrive() != null ? selectedStudent.getPlacementDrive().getId() : null,
+                    selectedStudent.getRollNumber(),
+                    selectedStudent.getBranch(),
+                    selectedStudent.getSelectionYear(),
+                    exception);
+
+            String rootMessage = findRootCauseMessage(exception);
+            if (rootMessage != null && rootMessage.toLowerCase().contains("section")) {
+                throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
+                        "Selected student record could not be saved because the database still expects the removed Section field.");
+            }
+
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
+                    "Selected student record could not be saved. Please verify the submitted values and try again.");
+        }
+    }
+
     private String normalizeOptional(String value) {
         if (value == null) {
             return null;
         }
         String trimmed = value.trim();
         return trimmed.isEmpty() ? null : trimmed;
+    }
+
+    private String findRootCauseMessage(Throwable throwable) {
+        Throwable current = throwable;
+        while (current.getCause() != null && current.getCause() != current) {
+            current = current.getCause();
+        }
+        return current.getMessage();
     }
 
     private SelectedStudentResponse toResponse(SelectedStudent selectedStudent) {

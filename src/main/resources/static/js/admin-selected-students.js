@@ -21,7 +21,15 @@
         });
 
         if (!response.ok) {
-            throw new Error(payload && payload.message ? payload.message : "Request failed.");
+            console.error("Admin selected students request failed:", {
+                url: url,
+                status: response.status,
+                payload: payload
+            });
+
+            const validationErrors = payload && Array.isArray(payload.errors) ? payload.errors.join(" ") : "";
+            const errorMessage = payload && (payload.message || payload.detail || payload.error || payload.title);
+            throw new Error(errorMessage || validationErrors || "Unable to save selected student record.");
         }
 
         return payload;
@@ -317,6 +325,7 @@
             event.preventDefault();
 
             const payload = buildPayload(form);
+            console.log("Admin selected student payload:", payload);
             const validationMessage = validatePayload(payload);
             if (validationMessage) {
                 setFeedback(validationMessage, true);

@@ -36,12 +36,3 @@ ALTER TABLE interview_experiences ADD COLUMN IF NOT EXISTS hr_questions TEXT;
 
 ALTER TABLE interview_experiences DROP COLUMN IF EXISTS preparation_tips;
 ALTER TABLE interview_experiences ADD COLUMN IF NOT EXISTS preparation_tips TEXT;
-
-ALTER TABLE selected_students ADD COLUMN IF NOT EXISTS selection_year INTEGER;
-UPDATE selected_students
-SET selection_year = EXTRACT(YEAR FROM selection_date)::INTEGER
-WHERE selection_year IS NULL
-  AND selection_date IS NOT NULL;
-
-ALTER TABLE selected_students DROP COLUMN IF EXISTS role_offered;
-ALTER TABLE selected_students DROP COLUMN IF EXISTS section;
