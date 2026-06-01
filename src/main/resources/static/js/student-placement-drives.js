@@ -89,6 +89,29 @@
         ].join("");
     }
 
+    function buildGeneratedDriveTitle(companyName, hiringYear) {
+        const safeCompanyName = safeText(companyName, "").trim();
+        const safeHiringYear = hiringYear != null ? String(hiringYear).trim() : "";
+        if (safeCompanyName && safeHiringYear) {
+            return safeCompanyName + " - " + safeHiringYear;
+        }
+        return safeCompanyName || safeHiringYear || "";
+    }
+
+    function getDisplayDriveTitle(drive) {
+        return buildGeneratedDriveTitle(drive.companyName, drive.hiringYear)
+            || safeText(drive.driveTitle, "Untitled Drive");
+    }
+
+    function getDriveSubtitle(drive) {
+        const generatedTitle = buildGeneratedDriveTitle(drive.companyName, drive.hiringYear);
+        const storedTitle = safeText(drive.driveTitle, "").trim();
+        if (storedTitle && storedTitle !== generatedTitle) {
+            return storedTitle;
+        }
+        return safeText(drive.companyName, "Company") + " • Hiring Year " + safeText(drive.hiringYear, "N/A");
+    }
+
     function buildDetailItem(icon, label, value) {
         return [
             '<div class="detail-item">',
@@ -216,6 +239,8 @@
         }
 
         drives.forEach(function (drive) {
+            const displayTitle = getDisplayDriveTitle(drive);
+            const driveSubtitle = getDriveSubtitle(drive);
             const websiteMarkup = drive.companyWebsiteUrl
                 ? [
                     '<a class="btn-primary" href="', escapeHtml(drive.companyWebsiteUrl), '" target="_blank" rel="noopener noreferrer">',
@@ -231,8 +256,8 @@
                 '<div class="company-info">',
                 getLogoMarkup(drive),
                 '<div class="company-titles">',
-                "<h3>", escapeHtml(safeText(drive.driveTitle, "Untitled Drive")), "</h3>",
-                "<p>", escapeHtml(safeText(drive.companyName, "Company")), " &bull; Hiring Year ", escapeHtml(safeText(drive.hiringYear, "N/A")), "</p>",
+                "<h3>", escapeHtml(displayTitle), "</h3>",
+                "<p>", escapeHtml(driveSubtitle), "</p>",
                 "</div>",
                 "</div>",
                 "</div>",

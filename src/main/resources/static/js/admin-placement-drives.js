@@ -286,10 +286,17 @@
     }
 
     function buildPayload(form) {
+        const companyId = form.elements.companyId.value ? Number(form.elements.companyId.value) : null;
+        const hiringYear = form.elements.hiringYear.value ? Number(form.elements.hiringYear.value) : null;
+        const selectedCompany = companies.find(function (company) {
+            return String(company.id) === String(companyId);
+        });
+        const enteredDriveTitle = form.elements.driveTitle.value.trim();
+
         return {
-            companyId: form.elements.companyId.value ? Number(form.elements.companyId.value) : null,
-            driveTitle: form.elements.driveTitle.value.trim(),
-            hiringYear: form.elements.hiringYear.value ? Number(form.elements.hiringYear.value) : null,
+            companyId: companyId,
+            driveTitle: enteredDriveTitle || buildGeneratedDriveTitle(selectedCompany ? selectedCompany.companyName : "", hiringYear),
+            hiringYear: hiringYear,
             hiringDate: form.elements.hiringDate.value,
             hiringMode: form.elements.hiringMode.value,
             hiringLocation: form.elements.hiringLocation.value.trim(),
@@ -312,7 +319,7 @@
     }
 
     function validatePayload(payload) {
-        if (!payload.companyId || !payload.driveTitle || !payload.hiringYear || !payload.hiringDate || !payload.hiringMode
+        if (!payload.companyId || !payload.hiringYear || !payload.hiringDate || !payload.hiringMode
             || !payload.eligibleBranches || payload.eligibleCgpa === null || !payload.jobType || !payload.ctcPackage || !payload.driveStatus) {
             return "Please fill all required fields for the placement drive.";
         }
@@ -352,6 +359,30 @@
         return '<div class="drive-company-logo"></div>';
     }
 
+    function buildGeneratedDriveTitle(companyName, hiringYear) {
+        const safeCompanyName = companyName ? String(companyName).trim() : "";
+        const safeHiringYear = hiringYear != null ? String(hiringYear).trim() : "";
+        if (safeCompanyName && safeHiringYear) {
+            return safeCompanyName + " - " + safeHiringYear;
+        }
+        return safeCompanyName || safeHiringYear || "";
+    }
+
+    function getDisplayDriveTitle(drive) {
+        return buildGeneratedDriveTitle(drive.companyName, drive.hiringYear)
+            || drive.driveTitle
+            || "Untitled Drive";
+    }
+
+    function getDriveSubtitle(drive) {
+        const generatedTitle = buildGeneratedDriveTitle(drive.companyName, drive.hiringYear);
+        const storedTitle = drive.driveTitle ? String(drive.driveTitle).trim() : "";
+        if (storedTitle && storedTitle !== generatedTitle) {
+            return storedTitle;
+        }
+        return "";
+    }
+
     async function loadDrives() {
         const loadingElement = document.getElementById("adminDrivesLoading");
         const list = document.getElementById("adminDriveList");
@@ -372,6 +403,8 @@
             }
 
             drives.forEach(function (drive) {
+                const displayTitle = getDisplayDriveTitle(drive);
+                const driveSubtitle = getDriveSubtitle(drive);
                 const card = document.createElement("article");
                 card.className = "admin-drive-item";
                 card.innerHTML = [
@@ -379,8 +412,10 @@
                     '<div class="drive-company-block">',
                     getLogoMarkup(drive),
                     "<div>",
-                    "<h3>" + escapeHtml(drive.driveTitle) + "</h3>",
-                    "<p>" + escapeHtml(drive.companyName) + " | Hiring Year " + escapeHtml(drive.hiringYear) + "</p>",
+                    "<h3>" + escapeHtml(displayTitle) + "</h3>",
+                    (driveSubtitle
+                        ? "<p>" + escapeHtml(driveSubtitle) + "</p>"
+                        : "<p>" + escapeHtml(drive.companyName) + " | Hiring Year " + escapeHtml(drive.hiringYear) + "</p>"),
                     "</div>",
                     "</div>",
                     '<span class="active-badge ' + (drive.active ? "active-enabled" : "active-disabled") + '">' + (drive.active ? "Active" : "Disabled") + "</span>",

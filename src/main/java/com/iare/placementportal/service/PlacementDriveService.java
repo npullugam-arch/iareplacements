@@ -28,6 +28,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
@@ -317,13 +318,13 @@ public class PlacementDriveService {
             throw new RowValidationException("Drive Title is required.");
         }
 
-        Integer hiringYear = parseIntegerRequired(readString(row, headerIndexMap, "Hiring Year"), "Hiring Year");
+        Integer hiringYear = parseIntegerRequired(row, headerIndexMap, "Hiring Year");
         LocalDate hiringDate = parseDateRequired(row, headerIndexMap, "Hiring Date");
         String hiringMode = requireText(readString(row, headerIndexMap, "Hiring Mode"), "Hiring Mode");
         String hiringLocation = normalizeOptional(readString(row, headerIndexMap, "Hiring Location"));
         String driveStatus = requireText(readString(row, headerIndexMap, "Drive Status"), "Drive Status");
         String eligibleBranches = requireText(readString(row, headerIndexMap, "Eligible Branches"), "Eligible Branches");
-        Double eligibleCgpa = parseDoubleRequired(readString(row, headerIndexMap, "Eligible CGPA"), "Eligible CGPA");
+        Double eligibleCgpa = parseDoubleRequired(row, headerIndexMap, "Eligible CGPA");
         String jobType = requireText(readString(row, headerIndexMap, "Job Type"), "Job Type");
         String ctcPackage = requireText(readString(row, headerIndexMap, "CTC Package"), "CTC Package");
 
@@ -337,12 +338,12 @@ public class PlacementDriveService {
                 eligibleBranches,
                 eligibleCgpa,
                 parseBoolean(readString(row, headerIndexMap, "Backlogs Allowed")),
-                parseIntegerOptional(readString(row, headerIndexMap, "Max Backlogs")),
+                parseIntegerOptional(row, headerIndexMap, "Max Backlogs"),
                 normalizeOptional(readString(row, headerIndexMap, "Bond Details")),
                 jobType,
                 ctcPackage,
                 normalizeOptional(readString(row, headerIndexMap, "Stipend")),
-                parseIntegerOptional(readString(row, headerIndexMap, "No. of Rounds")),
+                parseIntegerOptional(row, headerIndexMap, "No. of Rounds"),
                 normalizeOptional(readString(row, headerIndexMap, "Round Names")),
                 parseDateOptional(row, headerIndexMap, "Registration Deadline"),
                 parseDateOptional(row, headerIndexMap, "Exam Date"),
@@ -418,6 +419,14 @@ public class PlacementDriveService {
         return headerIndexMap.get(normalizeHeader(headerName));
     }
 
+    private Cell getCell(Row row, Map<String, Integer> headerIndexMap, String headerName) {
+        Integer cellIndex = findHeaderIndex(headerIndexMap, headerName);
+        if (cellIndex == null) {
+            return null;
+        }
+        return row.getCell(cellIndex, Row.MissingCellPolicy.RETURN_BLANK_AS_NULL);
+    }
+
     private String readCellAsString(Row row, Integer index) {
         if (row == null || index == null || index < 0) {
             return "";
@@ -447,18 +456,13 @@ public class PlacementDriveService {
     private LocalDate parseDateRequired(Row row, Map<String, Integer> headerIndexMap, String headerName) {
         LocalDate parsedDate = parseDateOptional(row, headerIndexMap, headerName);
         if (parsedDate == null) {
-            throw new RowValidationException(headerName + " is required.");
+            throw new RowValidationException("Invalid value in column '" + headerName + "': blank");
         }
         return parsedDate;
     }
 
     private LocalDate parseDateOptional(Row row, Map<String, Integer> headerIndexMap, String headerName) {
-        Integer cellIndex = findHeaderIndex(headerIndexMap, headerName);
-        if (cellIndex == null) {
-            return null;
-        }
-
-        Cell cell = row.getCell(cellIndex, Row.MissingCellPolicy.RETURN_BLANK_AS_NULL);
+        Cell cell = getCell(row, headerIndexMap, headerName);
         if (cell == null) {
             return null;
         }
@@ -479,7 +483,7 @@ public class PlacementDriveService {
             }
         }
 
-        throw new RowValidationException(headerName + " must be a valid date.");
+        throw new RowValidationException("Invalid value in column '" + headerName + "': " + rawValue);
     }
 
     private boolean isExcelDateLikeCell(Cell cell) {
@@ -496,46 +500,91 @@ public class PlacementDriveService {
             return false;
         }
 
-        return DateUtil.isCellDateFormatted(cell) || DateUtil.isValidExcelDate(cell.getNumericCellValue());
+        return DateUtil.isCellDateFormatted(cell);
     }
 
     private LocalDate getCellAsLocalDate(Cell cell) {
         return DateUtil.getLocalDateTime(cell.getNumericCellValue()).toLocalDate();
     }
 
-    private Integer parseIntegerRequired(String value, String fieldName) {
-        Integer parsedValue = parseIntegerOptional(value);
+    private Integer parseIntegerRequired(Row row, Map<String, Integer> headerIndexMap, String fieldName) {
+        Integer parsedValue = parseIntegerOptional(row, headerIndexMap, fieldName);
         if (parsedValue == null) {
-            throw new RowValidationException(fieldName + " is required.");
+            throw new RowValidationException("Invalid value in column '" + fieldName + "': blank");
         }
         return parsedValue;
     }
 
-    private Integer parseIntegerOptional(String value) {
-        String normalizedValue = normalizeOptional(value);
+    private Integer parseIntegerOptional(Row row, Map<String, Integer> headerIndexMap, String fieldName) {
+        Cell cell = getCell(row, headerIndexMap, fieldName);
+        if (cell == null) {
+            return null;
+        }
+
+        CellType cellType = cell.getCellType();
+        if (cellType == CellType.FORMULA) {
+            cellType = cell.getCachedFormulaResultType();
+        }
+
+        if (cellType == CellType.NUMERIC) {
+            if (isExcelDateLikeCell(cell)) {
+                String rawValue = DATA_FORMATTER.formatCellValue(cell).trim();
+                throw new RowValidationException("Invalid value in column '" + fieldName + "': " + rawValue);
+            }
+            return parseWholeNumberValue(BigDecimal.valueOf(cell.getNumericCellValue()), fieldName,
+                    DATA_FORMATTER.formatCellValue(cell).trim());
+        }
+
+        String normalizedValue = normalizeOptional(DATA_FORMATTER.formatCellValue(cell));
         if (normalizedValue == null) {
             return null;
         }
 
         try {
-            return normalizedValue.contains(".")
-                    ? (int) Double.parseDouble(normalizedValue)
-                    : Integer.parseInt(normalizedValue);
+            return parseWholeNumberValue(new BigDecimal(normalizedValue), fieldName, normalizedValue);
         } catch (NumberFormatException exception) {
-            throw new RowValidationException("Expected a valid whole number but found '" + normalizedValue + "'.");
+            throw new RowValidationException("Invalid value in column '" + fieldName + "': " + normalizedValue);
+        } catch (ArithmeticException exception) {
+            throw new RowValidationException("Invalid value in column '" + fieldName + "': " + normalizedValue);
         }
     }
 
-    private Double parseDoubleRequired(String value, String fieldName) {
-        Double parsedValue = parseDoubleOptional(value);
+    private Integer parseWholeNumberValue(BigDecimal value, String fieldName, String rawValue) {
+        BigDecimal normalizedValue = value.stripTrailingZeros();
+        if (normalizedValue.scale() > 0) {
+            throw new RowValidationException("Invalid value in column '" + fieldName + "': " + rawValue);
+        }
+        return normalizedValue.intValueExact();
+    }
+
+    private Double parseDoubleRequired(Row row, Map<String, Integer> headerIndexMap, String fieldName) {
+        Double parsedValue = parseDoubleOptional(row, headerIndexMap, fieldName);
         if (parsedValue == null) {
-            throw new RowValidationException(fieldName + " is required.");
+            throw new RowValidationException("Invalid value in column '" + fieldName + "': blank");
         }
         return parsedValue;
     }
 
-    private Double parseDoubleOptional(String value) {
-        String normalizedValue = normalizeOptional(value);
+    private Double parseDoubleOptional(Row row, Map<String, Integer> headerIndexMap, String fieldName) {
+        Cell cell = getCell(row, headerIndexMap, fieldName);
+        if (cell == null) {
+            return null;
+        }
+
+        CellType cellType = cell.getCellType();
+        if (cellType == CellType.FORMULA) {
+            cellType = cell.getCachedFormulaResultType();
+        }
+
+        if (cellType == CellType.NUMERIC) {
+            if (isExcelDateLikeCell(cell)) {
+                String rawValue = DATA_FORMATTER.formatCellValue(cell).trim();
+                throw new RowValidationException("Invalid value in column '" + fieldName + "': " + rawValue);
+            }
+            return cell.getNumericCellValue();
+        }
+
+        String normalizedValue = normalizeOptional(DATA_FORMATTER.formatCellValue(cell));
         if (normalizedValue == null) {
             return null;
         }
@@ -543,7 +592,7 @@ public class PlacementDriveService {
         try {
             return Double.parseDouble(normalizedValue);
         } catch (NumberFormatException exception) {
-            throw new RowValidationException("Expected a valid number but found '" + normalizedValue + "'.");
+            throw new RowValidationException("Invalid value in column '" + fieldName + "': " + normalizedValue);
         }
     }
 
