@@ -54,8 +54,8 @@ public class PlacementAiDataService {
     }
 
     public String answerPortalQuestion(AiIntentResult intent) {
-        LOGGER.info("AI portal data fetch started: intent={}, entity={}, answerMode={}, company='{}', year={}, branch='{}', limit={}",
-                intent.intent(), intent.entity(), intent.answerMode(), intent.company(), intent.year(), intent.branch(), intent.limit());
+        LOGGER.info("AI portal data fetch started: intent={}, mode={}, projection={}, company='{}', year={}, branch='{}', limit={}",
+                intent.intent(), intent.mode(), intent.projection(), intent.company(), intent.year(), intent.branch(), intent.limit());
 
         return switch (intent.intent()) {
             case COMPANY_INFO -> answerCompanyInfo(intent);
@@ -80,7 +80,7 @@ public class PlacementAiDataService {
 
     private String answerCompanyInfo(AiIntentResult intent) {
         Company company = resolveCompany(intent.company());
-        if (intent.answerMode() == AiAnswerMode.COUNT) {
+        if (intent.mode() == AiAnswerMode.COUNT) {
             return "Yes, " + company.getCompanyName() + " is a company in the portal database.";
         }
 
@@ -108,6 +108,7 @@ public class PlacementAiDataService {
     }
 
     private String answerSelectedStudents(AiIntentResult intent) {
+        requireModeAndProjection(intent, AiAnswerMode.LIST, AiProjection.DEFAULT);
         Company company = resolveCompany(intent.company());
         Integer year = intent.year();
         List<SelectedStudent> students = selectedStudentRepository.findTopActiveByCompanyName(
@@ -121,12 +122,6 @@ public class PlacementAiDataService {
             return year == null
                     ? "No selected students data found for " + company.getCompanyName() + " in the portal database."
                     : "No selected students data found for " + company.getCompanyName() + " in " + year + " in the portal database.";
-        }
-
-        if (intent.answerMode() == AiAnswerMode.COUNT) {
-            return company.getCompanyName() + " selected " + students.size() + " student"
-                    + (students.size() == 1 ? "" : "s")
-                    + (year == null ? " in the available portal records." : " in " + year + ".");
         }
 
         StringBuilder answer = new StringBuilder();
@@ -159,19 +154,26 @@ public class PlacementAiDataService {
     }
 
     private String answerSelectedCount(AiIntentResult intent) {
-        return answerSelectedStudents(new AiIntentResult(
-                AiIntentType.SELECTED_STUDENTS_BY_COMPANY,
-                intent.entity(),
-                AiAnswerMode.COUNT,
-                intent.company(),
-                intent.year(),
-                intent.branch(),
-                intent.limit(),
-                intent.originalQuestion()
-        ));
+        requireModeAndProjection(intent, AiAnswerMode.COUNT, AiProjection.NONE);
+        Company company = resolveCompany(intent.company());
+        Integer year = intent.year();
+        long count = selectedStudentRepository.countActiveByCompanyName(
+                company.getCompanyName(),
+                year,
+                normalizeFilter(intent.branch())
+        );
+        if (count == 0) {
+            return year == null
+                    ? "No selected students data found for " + company.getCompanyName() + " in the portal database."
+                    : "No selected students data found for " + company.getCompanyName() + " in " + year + " in the portal database.";
+        }
+        return company.getCompanyName() + " selected " + count + " student"
+                + (count == 1 ? "" : "s")
+                + (year == null ? " in the available portal records." : " in " + year + ".");
     }
 
     private String answerCompanyVisitCount(AiIntentResult intent) {
+        requireModeAndProjection(intent, AiAnswerMode.COUNT, AiProjection.NONE);
         Integer year = requireYear(intent, "Please mention the company name or year.");
         long count = placementDriveRepository.countDistinctActiveCompaniesByHiringYear(year);
         if (count == 0) {
@@ -181,15 +183,12 @@ public class PlacementAiDataService {
     }
 
     private String answerCompaniesVisited(AiIntentResult intent) {
+        requireModeAndProjection(intent, AiAnswerMode.LIST, AiProjection.COMPANY_NAMES);
         Integer year = requireYear(intent, "Please mention the company name or year.");
         List<String> companies = placementDriveRepository.findDistinctActiveCompanyNamesByHiringYear(year);
         if (companies.isEmpty()) {
             return "No company visit data found for " + year + " in the portal database.";
         }
-        if (intent.answerMode() == AiAnswerMode.COUNT) {
-            return companies.size() + " companies visited in " + year + ".";
-        }
-
         List<String> limitedCompanies = companies.stream().limit(sanitizeLimit(intent.limit())).toList();
         StringBuilder answer = new StringBuilder("Companies visited in ")
                 .append(year)
@@ -224,6 +223,18 @@ public class PlacementAiDataService {
     private String answerDriveDetails(AiIntentResult intent) {
         Company company = resolveCompany(intent.company());
         Integer year = intent.year();
+        if (intent.mode() == AiAnswerMode.COUNT) {
+            long count = placementDriveRepository.countActiveByCompanyName(company.getCompanyName(), year);
+            if (count == 0) {
+                return year == null
+                        ? "No placement drive data found for " + company.getCompanyName() + " in the portal database."
+                        : "No placement drive data found for " + company.getCompanyName() + " in " + year + " in the portal database.";
+            }
+            return company.getCompanyName() + " has " + count + " drive"
+                    + (count == 1 ? "" : "s")
+                    + (year == null ? " in the available portal records." : " in " + year + ".");
+        }
+
         List<PlacementDrive> drives = placementDriveRepository.findActiveByCompanyName(
                 company.getCompanyName(),
                 year,
@@ -235,12 +246,6 @@ public class PlacementAiDataService {
                     ? "No placement drive data found for " + company.getCompanyName() + " in the portal database."
                     : "No placement drive data found for " + company.getCompanyName() + " in " + year + " in the portal database.";
         }
-        if (intent.answerMode() == AiAnswerMode.COUNT) {
-            return company.getCompanyName() + " has " + drives.size() + " drive"
-                    + (drives.size() == 1 ? "" : "s")
-                    + (year == null ? " in the available portal records." : " in " + year + ".");
-        }
-
         StringBuilder answer = new StringBuilder();
         answer.append(company.getCompanyName())
                 .append(" has ")
@@ -253,15 +258,17 @@ public class PlacementAiDataService {
             PlacementDrive drive = drives.get(index);
             answer.append(index + 1)
                     .append(". ")
-                    .append(drive.getDriveTitle())
-                    .append(" | Date: ")
-                    .append(drive.getHiringDate())
-                    .append(" | Mode: ")
-                    .append(drive.getHiringMode())
-                    .append(" | Status: ")
-                    .append(drive.getDriveStatus())
-                    .append(" | CTC: ")
-                    .append(drive.getCtcPackage());
+                    .append(drive.getDriveTitle());
+            if (intent.projection() != AiProjection.TITLES_ONLY) {
+                answer.append(" | Date: ")
+                        .append(drive.getHiringDate())
+                        .append(" | Mode: ")
+                        .append(drive.getHiringMode())
+                        .append(" | Status: ")
+                        .append(drive.getDriveStatus())
+                        .append(" | CTC: ")
+                        .append(drive.getCtcPackage());
+            }
             if (index < drives.size() - 1) {
                 answer.append('\n');
             }
@@ -270,6 +277,7 @@ public class PlacementAiDataService {
     }
 
     private String answerPlacementStatistics(AiIntentResult intent) {
+        requireProjection(intent, AiProjection.STATISTICS);
         Company company = resolveCompany(intent.company());
         Integer year = intent.year();
         List<PlacementStatistics> statistics = placementStatisticsRepository.findActiveByCompanyName(
@@ -313,26 +321,38 @@ public class PlacementAiDataService {
     }
 
     private String answerNotices(AiIntentResult intent) {
+        if (intent.mode() == AiAnswerMode.COUNT) {
+            requireProjection(intent, AiProjection.NONE);
+            long count = noticeRepository.countCurrentlyActiveNotices(LocalDate.now());
+            if (count == 0) {
+                return "There are no active notices in the portal database right now.";
+            }
+            return "There are " + count + " active notice" + (count == 1 ? "" : "s") + " in the portal database.";
+        }
+
         List<Notice> notices = noticeRepository.findCurrentlyActiveNotices(LocalDate.now());
         if (notices.isEmpty()) {
             return "There are no active notices in the portal database right now.";
-        }
-        if (intent.answerMode() == AiAnswerMode.COUNT) {
-            return "There are " + notices.size() + " active notice" + (notices.size() == 1 ? "" : "s") + " in the portal database.";
         }
 
         StringBuilder answer = new StringBuilder("Active notices:\n");
         for (int index = 0; index < notices.size(); index++) {
             Notice notice = notices.get(index);
             answer.append(index + 1)
-                    .append(". ")
-                    .append(notice.getTitle())
-                    .append(" | Valid: ")
-                    .append(notice.getValidFrom())
-                    .append(" to ")
-                    .append(notice.getValidTo());
-            if (normalizeOptional(notice.getMessage()) != null) {
-                answer.append(" | ").append(notice.getMessage());
+                    .append(". ");
+            if (intent.projection() == AiProjection.VALID_DATES) {
+                answer.append(notice.getValidFrom()).append(" to ").append(notice.getValidTo());
+            } else if (intent.projection() == AiProjection.TITLES_ONLY) {
+                answer.append(notice.getTitle());
+            } else {
+                answer.append(notice.getTitle())
+                        .append(" | Valid: ")
+                        .append(notice.getValidFrom())
+                        .append(" to ")
+                        .append(notice.getValidTo());
+                if (normalizeOptional(notice.getMessage()) != null) {
+                    answer.append(" | ").append(notice.getMessage());
+                }
             }
             if (index < notices.size() - 1) {
                 answer.append('\n');
@@ -344,6 +364,19 @@ public class PlacementAiDataService {
     private String answerResources(AiIntentResult intent) {
         Company company = resolveCompany(intent.company());
         Integer year = intent.year();
+        if (intent.mode() == AiAnswerMode.COUNT) {
+            long count = preparationResourceRepository.countActiveByCompanyName(company.getCompanyName(), year);
+            if (count == 0) {
+                return year == null
+                        ? "No preparation resources found for " + company.getCompanyName() + " in the portal database."
+                        : "No preparation resources found for " + company.getCompanyName() + " in " + year + " in the portal database.";
+            }
+            return "There are " + count + " preparation resource"
+                    + (count == 1 ? "" : "s")
+                    + " for " + company.getCompanyName()
+                    + (year == null ? " in the portal database." : " in " + year + ".");
+        }
+
         List<PreparationResource> resources = preparationResourceRepository.findActiveByCompanyName(
                 company.getCompanyName(),
                 year,
@@ -355,13 +388,6 @@ public class PlacementAiDataService {
                     ? "No preparation resources found for " + company.getCompanyName() + " in the portal database."
                     : "No preparation resources found for " + company.getCompanyName() + " in " + year + " in the portal database.";
         }
-        if (intent.answerMode() == AiAnswerMode.COUNT) {
-            return "There are " + resources.size() + " preparation resource"
-                    + (resources.size() == 1 ? "" : "s")
-                    + " for " + company.getCompanyName()
-                    + (year == null ? " in the portal database." : " in " + year + ".");
-        }
-
         StringBuilder answer = new StringBuilder("Resources found for ")
                 .append(company.getCompanyName())
                 .append(year == null ? ":" : " in " + year + ":")
@@ -372,13 +398,15 @@ public class PlacementAiDataService {
             answer.append(index + 1)
                     .append(". ")
                     .append(resource.getResourceTitle());
-            if (normalizeOptional(resource.getDescription()) != null) {
-                answer.append(" - ").append(resource.getDescription());
+            if (intent.projection() != AiProjection.TITLES_ONLY) {
+                if (normalizeOptional(resource.getDescription()) != null) {
+                    answer.append(" - ").append(resource.getDescription());
+                }
+                answer.append(" | PDFs: aptitude=").append(yesNo(resource.getAptitudePdfUrl()))
+                        .append(", coding=").append(yesNo(resource.getCodingPdfUrl()))
+                        .append(", technical=").append(yesNo(resource.getTechnicalPdfUrl()))
+                        .append(", hr=").append(yesNo(resource.getHrPdfUrl()));
             }
-            answer.append(" | PDFs: aptitude=").append(yesNo(resource.getAptitudePdfUrl()))
-                    .append(", coding=").append(yesNo(resource.getCodingPdfUrl()))
-                    .append(", technical=").append(yesNo(resource.getTechnicalPdfUrl()))
-                    .append(", hr=").append(yesNo(resource.getHrPdfUrl()));
             if (index < resources.size() - 1) {
                 answer.append('\n');
             }
@@ -429,6 +457,20 @@ public class PlacementAiDataService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, message);
         }
         return intent.year();
+    }
+
+    private void requireModeAndProjection(AiIntentResult intent, AiAnswerMode mode, AiProjection projection) {
+        if (intent.mode() != mode || intent.projection() != projection) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "This portal data request has an unsupported answer format.");
+        }
+    }
+
+    private void requireProjection(AiIntentResult intent, AiProjection projection) {
+        if (intent.projection() != projection) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "This portal data request has an unsupported answer format.");
+        }
     }
 
     private int sanitizeLimit(Integer limit) {

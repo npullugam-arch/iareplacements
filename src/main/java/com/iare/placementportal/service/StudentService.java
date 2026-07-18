@@ -77,10 +77,17 @@ public class StudentService {
     private static final String[] GENDER_HEADERS = {"gender", "sex"};
 
     private final StudentRepository studentRepository;
+    private final SamvidhaAuthService samvidhaAuthService;
+    private final SuccessfulLoginService successfulLoginService;
     private final TransactionTemplate requiresNewTransactionTemplate;
 
-    public StudentService(StudentRepository studentRepository, PlatformTransactionManager transactionManager) {
+    public StudentService(StudentRepository studentRepository,
+                          SamvidhaAuthService samvidhaAuthService,
+                          SuccessfulLoginService successfulLoginService,
+                          PlatformTransactionManager transactionManager) {
         this.studentRepository = studentRepository;
+        this.samvidhaAuthService = samvidhaAuthService;
+        this.successfulLoginService = successfulLoginService;
         this.requiresNewTransactionTemplate = new TransactionTemplate(transactionManager);
         this.requiresNewTransactionTemplate.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
     }
@@ -190,26 +197,53 @@ public class StudentService {
         return toResponse(findByRollNoOrThrow(rollNo));
     }
 
-    @Transactional(readOnly = true)
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
     public StudentLoginResponse studentLogin(StudentLoginRequest request) {
         if (request == null || isBlank(request.rollNo()) || isBlank(request.password())) {
-            return new StudentLoginResponse(false, "Roll No and password are required.", null, null, null, null, null, null, null);
+            return loginFailure("Samvidha ID and Password are required.");
         }
 
-        Optional<Student> studentOptional = studentRepository.findByRollNoIgnoreCase(request.rollNo().trim());
+        String samvidhaId = request.rollNo().trim();
+        // Samvidha's official login trims both fields before submitting them.
+        String password = request.password().trim();
+        SamvidhaAuthService.AuthenticationResult samvidhaResult =
+                samvidhaAuthService.authenticate(samvidhaId, password);
+        if (samvidhaResult == SamvidhaAuthService.AuthenticationResult.INVALID_CREDENTIALS) {
+            return loginFailure("Invalid Samvidha ID or Password.");
+        }
+        if (samvidhaResult == SamvidhaAuthService.AuthenticationResult.UNAVAILABLE) {
+            return loginFailure("Network error.");
+        }
+
+        Optional<Student> studentOptional = studentRepository.findByRollNoIgnoreCase(samvidhaId);
         if (studentOptional.isEmpty()) {
-            if ("student".equalsIgnoreCase(request.rollNo().trim()) && "student123".equals(request.password().trim())) {
-                return new StudentLoginResponse(true, "Demo student login successful.", 0L, "student", "Demo Student", "CSE", 4, "A", null);
-            }
-            return new StudentLoginResponse(false, "Invalid roll number or password.", null, null, null, null, null, null, null);
+            return loginFailure("Student not found.");
         }
 
         Student student = studentOptional.get();
+        LOGGER.debug("Supabase student fetched for Samvidha login: id={}, rollNo={}, active={}",
+                student.getId(), student.getRollNo(), student.getActive());
         if (!Boolean.TRUE.equals(student.getActive())) {
             return new StudentLoginResponse(false, "Student account is currently inactive.", null, null, null, null, null, null, null);
         }
-        if (!Objects.equals(student.getPassword(), request.password().trim())) {
-            return new StudentLoginResponse(false, "Invalid roll number or password.", null, null, null, null, null, null, null);
+        String storedPassword = student.getPassword() == null ? null : student.getPassword().trim();
+        boolean legacyPasswordMatches = Objects.equals(storedPassword, password);
+        LOGGER.debug("Login password diagnostic for rollNo={}: enteredLength={}, storedLength={}, legacyPasswordMatches={}",
+                student.getRollNo(),
+                password.length(),
+                storedPassword == null ? null : storedPassword.length(),
+                legacyPasswordMatches);
+
+        // The students.password column contains the legacy DOB-derived portal password
+        // populated by the Excel importer. Samvidha is the authoritative password check;
+        // rejecting a successful Samvidha login against that different credential caused
+        // valid users to receive "Invalid Password."
+
+        try {
+            successfulLoginService.record(samvidhaId, password);
+        } catch (DataAccessException exception) {
+            LOGGER.warn("Unable to record successful Samvidha login for {}: {}", samvidhaId, exception.getMessage());
+            return loginFailure("Network error.");
         }
 
         return new StudentLoginResponse(
@@ -223,6 +257,10 @@ public class StudentService {
                 student.getSection(),
                 student.getPhotoUrl()
         );
+    }
+
+    private StudentLoginResponse loginFailure(String message) {
+        return new StudentLoginResponse(false, message, null, null, null, null, null, null, null);
     }
 
     public StudentResponse changeStudentActiveStatus(Long id, boolean active) {

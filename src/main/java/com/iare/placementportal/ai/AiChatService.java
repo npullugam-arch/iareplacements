@@ -53,8 +53,8 @@ public class AiChatService {
 
         AiIntentResult intent = aiIntentService.extractIntent(normalizedMessage);
 
-        LOGGER.info("AI chat routing: intent={}, entity={}, answerMode={}, company='{}', year={}, branch='{}', limit={}",
-                intent.intent(), intent.entity(), intent.answerMode(), intent.company(), intent.year(), intent.branch(), intent.limit());
+        LOGGER.info("AI chat routing: intent={}, mode={}, projection={}, company='{}', year={}, branch='{}', limit={}",
+                intent.intent(), intent.mode(), intent.projection(), intent.company(), intent.year(), intent.branch(), intent.limit());
 
         if (intent.intent() == AiIntentType.GENERAL_CHAT) {
             LOGGER.info("AI chat flow used: GENERAL_CHAT");

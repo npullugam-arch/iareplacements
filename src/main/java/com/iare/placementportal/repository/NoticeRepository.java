@@ -23,4 +23,13 @@ public interface NoticeRepository extends JpaRepository<Notice, Long> {
             order by notice.createdAt desc
             """)
     List<Notice> findCurrentlyActiveNotices(@Param("today") LocalDate today);
+
+    @Query("""
+            select count(notice)
+            from Notice notice
+            where notice.active = true
+              and notice.validFrom <= :today
+              and notice.validTo >= :today
+            """)
+    long countCurrentlyActiveNotices(@Param("today") LocalDate today);
 }

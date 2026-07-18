@@ -2,8 +2,8 @@ package com.iare.placementportal.ai;
 
 public record AiIntentResult(
         AiIntentType intent,
-        AiEntityType entity,
-        AiAnswerMode answerMode,
+        AiAnswerMode mode,
+        AiProjection projection,
         String company,
         Integer year,
         String branch,

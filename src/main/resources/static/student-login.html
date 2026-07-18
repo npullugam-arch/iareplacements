@@ -4,46 +4,308 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Student Login | IARE AI Placement Portal</title>
+
+    <!-- IMPORTANT -->
     <link rel="stylesheet" href="/css/login.css">
 </head>
+
 <body class="student-login-page">
 
-    <main class="login-page-wrapper">
-        <section class="login-card" id="cardContainer">
-            <div class="logo-container">
-                <img src="https://i.postimg.cc/prYT6shx/8ee6827a-7cf9-479e-b164-de0643a3b7a0.jpg" alt="IARE Placement Cell Logo">
+<div class="layout-container">
+
+    <!-- ========================= -->
+    <!-- LEFT SIDE : ANIMATED PC -->
+    <!-- ========================= -->
+    <div class="workspace-section">
+
+        <div class="desk-environment">
+
+            <!-- CPU -->
+            <div class="cpu-tower">
+
+                <div class="cpu-vents"></div>
+
+                <div class="cpu-indicators">
+                    <div class="ind-light power"></div>
+                    <div class="ind-light network blink-slow"></div>
+                    <div class="ind-light hdd" id="hdd-light"></div>
+                </div>
+
+                <div class="cpu-led" id="cpu-led"></div>
+
             </div>
 
-            <form id="studentLoginForm" novalidate>
-                <div class="input-group">
-                    <label for="studentUsername">User ID</label>
-                    <input
-                        type="text"
-                        id="studentUsername"
-                        name="username"
-                        placeholder="College Roll Number"
-                        required>
+            <!-- MONITOR -->
+            <div class="center-console">
+
+                <div class="monitor">
+
+                    <div class="screen" id="pc-screen">
+
+                        <!-- LOCK SCREEN -->
+
+                        <div class="os-ui" id="os-ui">
+
+                            <div class="os-time" id="os-time">
+                                10:42
+                            </div>
+
+                            <div class="os-pfp">
+
+                                <svg viewBox="0 0 24 24"
+                                     fill="none"
+                                     stroke="#fff"
+                                     stroke-width="2">
+
+                                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+
+                                    <circle
+                                        cx="12"
+                                        cy="7"
+                                        r="4">
+                                    </circle>
+
+                                </svg>
+
+                            </div>
+
+                            <div class="v-input-wrapper" id="v-user-wrap">
+
+                                <span
+                                    id="v-username"
+                                    class="v-text"></span>
+
+                                <span
+                                    class="v-blink"
+                                    id="c-user"
+                                    style="display:none;">|</span>
+
+                            </div>
+
+                            <div class="v-input-wrapper" id="v-pass-wrap">
+
+                                <span
+                                    id="v-password"
+                                    class="v-text"></span>
+
+                                <span
+                                    class="v-blink"
+                                    id="c-pass"
+                                    style="display:none;">|</span>
+
+                            </div>
+
+                            <div
+                                class="v-btn"
+                                id="v-login-btn">
+
+                                ➜
+
+                            </div>
+
+                            <!-- CURSOR -->
+
+                            <div
+                                class="v-cursor"
+                                id="v-cursor">
+
+                                <svg
+                                    width="12"
+                                    height="18"
+                                    viewBox="0 0 12 18"
+                                    fill="white"
+                                    stroke="black"
+                                    stroke-width="1">
+
+                                    <path
+                                        d="M1 1l10 10-4 1 3 5-2 1-3-5-3 3V1z">
+                                    </path>
+
+                                </svg>
+
+                            </div>
+
+                        </div>
+
+                        <!-- SUCCESS SCREEN -->
+
+                        <div
+                            class="welcome-ui"
+                            id="welcome-ui"
+                            style="display:none;">
+
+                            <div class="welcome-pfp">
+
+                                <img
+                                    id="welcome-photo"
+                                    class="welcome-photo"
+                                    alt="Student profile"
+                                    hidden>
+
+                                <svg
+                                    id="welcome-default-avatar"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="#fff"
+                                    stroke-width="2">
+
+                                    <path
+                                        d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2">
+                                    </path>
+
+                                    <circle
+                                        cx="12"
+                                        cy="7"
+                                        r="4">
+                                    </circle>
+
+                                </svg>
+
+                            </div>
+
+                            <div
+                                class="welcome-text"
+                                id="welcome-text">
+
+                                Welcome Back
+
+                            </div>
+
+                            <div class="welcome-loader"></div>
+
+                        </div>
+
+                        <!-- ERROR -->
+
+                        <div
+                            class="error-modal"
+                            id="error-modal"
+                            style="display:none;">
+
+                            ⚠ ACCESS DENIED
+
+                        </div>
+
+                    </div>
+
                 </div>
 
-                <div class="input-group">
-                    <label for="studentPassword">Password</label>
-                    <input
-                        type="password"
-                        id="studentPassword"
-                        name="password"
-                        placeholder="DDMMYYYY"
-                        required>
+                <div class="stand-neck"></div>
+
+                <div class="stand-base"></div>
+
+                <!-- DESK -->
+
+                <div class="desk-mat">
+
+                    <div
+                        class="keyboard"
+                        id="keyboard">
+
+                        <div class="keys"></div>
+
+                    </div>
+
+                    <div
+                        class="mouse"
+                        id="mouse"></div>
+
                 </div>
 
-                <p id="studentError" class="error-message" aria-live="polite"></p>
+            </div>
 
-                <button type="submit" class="login-btn" id="loginBtn">
-                    Authenticate
-                </button>
-            </form>
-        </section>
-    </main>
+        </div>
 
-    <script src="/js/auth.js"></script>
+        <div class="desk-edge"></div>
+
+    </div>
+
+    <!-- ========================= -->
+    <!-- RIGHT LOGIN CARD -->
+    <!-- ========================= -->
+
+    <div class="form-section">
+
+        <!-- IMPORTANT -->
+        <form
+            class="glass-card"
+            id="studentLoginForm"
+            novalidate>
+
+            <div class="card-header">
+
+                <h2>Campus Connect</h2>
+
+                <p>IARE Placement Portal</p>
+
+            </div>
+
+            <!-- USERNAME -->
+
+            <div class="input-group">
+
+                <label for="studentUsername">
+
+                    Samvidha ID 
+
+                </label>
+
+                <input
+                    type="text"
+                    id="studentUsername"
+                    name="username"
+                    placeholder="Enter Samvidha ID"
+                    autocomplete="off"
+                    required>
+
+            </div>
+
+            <!-- PASSWORD -->
+
+            <div class="input-group">
+
+                <label for="studentPassword">
+
+                    Password
+
+                </label>
+
+                <input
+                    type="password"
+                    id="studentPassword"
+                    name="password"
+                    placeholder="Enter Password"
+                    required>
+
+            </div>
+
+            <!-- ERROR -->
+
+            <p
+                id="studentError"
+                class="error-message"
+                aria-live="polite"></p>
+
+            <!-- LOGIN -->
+
+            <button
+                id="loginBtn"
+                class="login-btn"
+                type="submit">
+
+                Authenticate
+
+            </button>
+
+        </form>
+
+    </div>
+
+</div>
+
+<!-- IMPORTANT -->
+
+<script src="/js/auth.js"></script>
+
 </body>
 </html>

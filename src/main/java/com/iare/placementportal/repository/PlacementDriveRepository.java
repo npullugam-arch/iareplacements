@@ -110,4 +110,15 @@ public interface PlacementDriveRepository extends JpaRepository<PlacementDrive, 
     List<PlacementDrive> findActiveByCompanyName(@Param("companyName") String companyName,
                                                  @Param("hiringYear") Integer hiringYear,
                                                  Pageable pageable);
+
+    @Query("""
+            select count(pd)
+            from PlacementDrive pd
+            join pd.company c
+            where pd.active = true
+              and lower(c.companyName) = lower(:companyName)
+              and (:hiringYear is null or pd.hiringYear = :hiringYear)
+            """)
+    long countActiveByCompanyName(@Param("companyName") String companyName,
+                                  @Param("hiringYear") Integer hiringYear);
 }

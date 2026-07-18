@@ -32,4 +32,16 @@ public interface PreparationResourceRepository extends JpaRepository<Preparation
     List<PreparationResource> findActiveByCompanyName(@Param("companyName") String companyName,
                                                       @Param("hiringYear") Integer hiringYear,
                                                       Pageable pageable);
+
+    @Query("""
+            select count(pr)
+            from PreparationResource pr
+            join pr.placementDrive pd
+            join pd.company c
+            where pr.active = true
+              and lower(c.companyName) = lower(:companyName)
+              and (:hiringYear is null or pd.hiringYear = :hiringYear)
+            """)
+    long countActiveByCompanyName(@Param("companyName") String companyName,
+                                  @Param("hiringYear") Integer hiringYear);
 }
