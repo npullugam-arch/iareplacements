@@ -16,6 +16,15 @@
     let activeStudentsRequest = null;
     let searchDebounceTimer = null;
     let cardObserver = null;
+    let loadRequestToken = 0;
+    let isPageActive = true;
+
+    function deactivatePage() {
+        isPageActive = false;
+    }
+
+    window.addEventListener("pagehide", deactivatePage);
+    window.addEventListener("beforeunload", deactivatePage);
 
     function showElement(element) {
         if (element) {
@@ -64,21 +73,15 @@
             params.set("company", currentCompany);
         }
 
-        const response = await fetch(SELECTED_STUDENTS_API + "?" + params.toString(), {
-            method: "GET",
+        const payload = await window.apiClient.get(SELECTED_STUDENTS_API + "?" + params.toString(), {
+            timeout: 20000,
+            retries: 3,
+            retryDelay: 1200,
             signal,
             headers: {
                 Accept: "application/json"
             }
         });
-
-        const payload = await response.json().catch(function () {
-            return null;
-        });
-
-        if (!response.ok) {
-            throw new Error(payload && payload.message ? payload.message : "Unable to load selected students. Please try again.");
-        }
 
         if (!payload || !Array.isArray(payload.content)) {
             throw new Error("Invalid selected students response received.");
@@ -88,20 +91,14 @@
     }
 
     async function fetchFilterOptions() {
-        const response = await fetch(FILTER_OPTIONS_API, {
-            method: "GET",
+        const payload = await window.apiClient.get(FILTER_OPTIONS_API, {
+            timeout: 20000,
+            retries: 2,
+            retryDelay: 1000,
             headers: {
                 Accept: "application/json"
             }
         });
-
-        const payload = await response.json().catch(function () {
-            return null;
-        });
-
-        if (!response.ok) {
-            throw new Error(payload && payload.message ? payload.message : "Unable to load selected student filters.");
-        }
 
         return payload || { branches: [], companies: [] };
     }
@@ -350,6 +347,7 @@
         options = options || {};
         const safePage = Math.max(0, Number(page) || 0);
         const initialLoad = Boolean(options.initialLoad);
+        const requestId = ++loadRequestToken;
 
         if (isStudentsLoading && !options.force) {
             return;
@@ -357,6 +355,9 @@
 
         const cachedPage = getCachedPage(safePage);
         if (cachedPage) {
+            if (!isPageActive || requestId !== loadRequestToken) {
+                return;
+            }
             setListLoading(false, initialLoad);
             applyPagePayload(cachedPage);
             return;
@@ -373,6 +374,9 @@
 
         try {
             const payload = await fetchSelectedStudents(safePage, activeStudentsRequest.signal);
+            if (!isPageActive || requestId !== loadRequestToken) {
+                return;
+            }
             storePageInCache(safePage, payload);
             applyPagePayload(payload);
 
@@ -381,6 +385,9 @@
                 return;
             }
         } catch (error) {
+            if (!isPageActive || requestId !== loadRequestToken) {
+                return;
+            }
             if (error && error.name === "AbortError") {
                 return;
             }
@@ -391,10 +398,12 @@
             updatePaginationControls();
             showError("Unable to load selected students. Please try again.");
         } finally {
-            isStudentsLoading = false;
-            activeStudentsRequest = null;
-            updatePaginationControls();
-            setListLoading(false, initialLoad);
+            if (requestId === loadRequestToken) {
+                isStudentsLoading = false;
+                activeStudentsRequest = null;
+                updatePaginationControls();
+                setListLoading(false, initialLoad);
+            }
         }
     }
 

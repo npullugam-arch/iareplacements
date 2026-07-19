@@ -3,22 +3,47 @@
     const DEFAULT_NON_GET_TIMEOUT = 30000; // 30s
     const DEFAULT_GET_RETRIES = 2;
     const DEFAULT_RETRY_DELAY = 1000;
+    const RETRYABLE_STATUS_CODES = [408, 429, 500, 502, 503, 504, 524];
 
     function delay(ms) {
         return new Promise(function (resolve) { setTimeout(resolve, ms); });
     }
 
+    function getRequestPath(url) {
+        try {
+            const parsed = new URL(url, window.location.origin);
+            return parsed.pathname + parsed.search;
+        } catch (e) {
+            return url;
+        }
+    }
+
+    function isTransientError(err) {
+        const status = err && typeof err.status === 'number' ? err.status : null;
+        return Boolean(err && (
+            err.name === 'TypeError' ||
+            err.name === 'AbortError' ||
+            err.code === 'server_wake' ||
+            RETRYABLE_STATUS_CODES.includes(status)
+        ));
+    }
+
     async function rawFetch(url, options, timeout) {
-        const controller = new AbortController();
-        const signal = controller.signal;
-        const timer = setTimeout(function () { controller.abort(); }, timeout);
+        const hasExternalSignal = Boolean(options && options.signal);
+        const controller = hasExternalSignal ? null : new AbortController();
+        const signal = hasExternalSignal ? options.signal : (controller ? controller.signal : null);
+        const timer = controller ? setTimeout(function () { controller.abort(); }, timeout) : null;
 
         try {
-            const res = await fetch(url, Object.assign({}, options, { signal }));
-            clearTimeout(timer);
+            const res = await fetch(url, Object.assign({}, options || {}, { signal }));
+            if (timer) {
+                clearTimeout(timer);
+            }
             return res;
         } catch (err) {
-            clearTimeout(timer);
+            if (timer) {
+                clearTimeout(timer);
+            }
             throw err;
         }
     }
@@ -42,12 +67,12 @@
             while (true) {
                 attempt++;
                 try {
-                    const res = await rawFetch(url, { method: 'GET', headers: opts.headers || {} }, timeout);
+                    const res = await rawFetch(url, { method: 'GET', headers: opts.headers || {}, signal: opts.signal }, timeout);
                     if (!res.ok) {
-                        // treat common gateway/wakeup codes specially
-                        if ([502, 503, 504, 524].includes(res.status)) {
+                        if (RETRYABLE_STATUS_CODES.includes(res.status)) {
                             const wakeErr = new Error('Server is waking up');
                             wakeErr.code = 'server_wake';
+                            wakeErr.status = res.status;
                             throw wakeErr;
                         }
 
@@ -62,12 +87,26 @@
                     if (data === null) throw new Error('Invalid JSON response');
                     return data;
                 } catch (err) {
-                    console.error('apiClient GET error', url, err);
-                    const isNetwork = err.name === 'TypeError' || err.name === 'AbortError' || err.code === 'server_wake';
-                    if (attempt <= retries && isNetwork) {
-                        await delay(retryDelay);
+                    const transient = isTransientError(err);
+                    if (attempt <= retries && transient) {
+                        const waitMs = retryDelay * attempt;
+                        console.warn('[apiClient] Retrying GET', {
+                            url: getRequestPath(url),
+                            attempt,
+                            waitMs,
+                            status: err && err.status ? err.status : null,
+                            error: err && err.message ? err.message : err && err.name ? err.name : 'Unknown error'
+                        });
+                        await delay(waitMs);
                         continue;
                     }
+
+                    console.error('[apiClient] GET failed', {
+                        url: getRequestPath(url),
+                        attempts: attempt,
+                        status: err && err.status ? err.status : null,
+                        error: err && err.message ? err.message : err && err.name ? err.name : 'Unknown error'
+                    });
                     throw err;
                 }
             }

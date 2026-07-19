@@ -3,6 +3,15 @@
     const PAGE_SIZE = 20;
     let allNotices = [];
     let currentPage = 0;
+    let loadRequestToken = 0;
+    let isPageActive = true;
+
+    function deactivatePage() {
+        isPageActive = false;
+    }
+
+    window.addEventListener("pagehide", deactivatePage);
+    window.addEventListener("beforeunload", deactivatePage);
 
     function escapeHtml(value) {
         return String(value == null ? "" : value)
@@ -334,31 +343,22 @@
         setupPagination();
         updatePaginationControls();
 
+        const requestId = ++loadRequestToken;
+
         try {
             allNotices = await fetchActiveNotices();
+            if (!isPageActive || requestId !== loadRequestToken) {
+                return;
+            }
             currentPage = 0;
             renderCurrentNoticePage();
             renderDashboardPreview(allNotices);
             initLucideIcons();
             initNoticeCards();
         } catch (error) {
-            if (error && error.code === 'server_wake') {
-                const previewEmpty = document.getElementById('studentDashboardNoticeEmpty');
-                if (previewEmpty) previewEmpty.classList.remove('hidden');
-                setTimeout(async function () {
-                    try {
-                        allNotices = await fetchActiveNotices();
-                        currentPage = 0;
-                        renderCurrentNoticePage();
-                        renderDashboardPreview(allNotices);
-                        initNoticeCards();
-                    } catch (err) {
-                        showStudentError('Unable to load notices. Please refresh.');
-                    }
-                }, 2000);
+            if (!isPageActive || requestId !== loadRequestToken) {
                 return;
             }
-
             showStudentError('Unable to load notices. Please refresh.');
         }
     });

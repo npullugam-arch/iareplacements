@@ -12,6 +12,15 @@
     let isCompaniesLoading = false;
     let activeCompaniesRequest = null;
     let searchDebounceTimer = null;
+    let loadRequestToken = 0;
+    let isPageActive = true;
+
+    function deactivatePage() {
+        isPageActive = false;
+    }
+
+    window.addEventListener("pagehide", deactivatePage);
+    window.addEventListener("beforeunload", deactivatePage);
 
     function showElement(element) {
         if (element) {
@@ -77,21 +86,15 @@
             params.set("search", currentSearch);
         }
         const url = COMPANIES_API + "?" + params.toString();
-        const response = await fetch(url, {
-            method: "GET",
+        const payload = await window.apiClient.get(url, {
+            timeout: 20000,
+            retries: 3,
+            retryDelay: 1200,
             signal,
             headers: {
                 Accept: "application/json"
             }
         });
-
-        const payload = await response.json().catch(function () {
-            return null;
-        });
-
-        if (!response.ok) {
-            throw new Error(payload && payload.message ? payload.message : "Unable to load companies. Please try again.");
-        }
 
         if (!payload || !Array.isArray(payload.content)) {
             throw new Error("Invalid companies response received.");
@@ -506,6 +509,7 @@
         options = options || {};
         const safePage = Math.max(0, Number(page) || 0);
         const initialLoad = Boolean(options.initialLoad);
+        const requestId = ++loadRequestToken;
 
         if (isCompaniesLoading && !options.force) {
             return;
@@ -513,10 +517,11 @@
 
         const cachedPage = getCachedPage(safePage);
         if (cachedPage) {
+            if (!isPageActive || requestId !== loadRequestToken) {
+                return;
+            }
             setListLoading(false, initialLoad);
             applyPagePayload(cachedPage);
-            console.time("companies-page-load");
-            console.timeEnd("companies-page-load");
             return;
         }
 
@@ -528,9 +533,11 @@
         isCompaniesLoading = true;
         updatePaginationControls();
         setListLoading(true, initialLoad);
-        console.time("companies-page-load");
         try {
             const payload = await fetchCompanies(safePage, activeCompaniesRequest.signal);
+            if (!isPageActive || requestId !== loadRequestToken) {
+                return;
+            }
             storePageInCache(safePage, payload);
             applyPagePayload(payload);
 
@@ -539,6 +546,9 @@
                 return;
             }
         } catch (error) {
+            if (!isPageActive || requestId !== loadRequestToken) {
+                return;
+            }
             if (error && error.name === "AbortError") {
                 return;
             }
@@ -549,11 +559,12 @@
             updatePaginationControls();
             showError("Unable to load companies. Please try again.");
         } finally {
-            console.timeEnd("companies-page-load");
-            isCompaniesLoading = false;
-            activeCompaniesRequest = null;
-            updatePaginationControls();
-            setListLoading(false, initialLoad);
+            if (requestId === loadRequestToken) {
+                isCompaniesLoading = false;
+                activeCompaniesRequest = null;
+                updatePaginationControls();
+                setListLoading(false, initialLoad);
+            }
         }
     }
 

@@ -16,6 +16,15 @@
     let activeStatisticsRequest = null;
     let searchDebounceTimer = null;
     let statisticsObserver = null;
+    let loadRequestToken = 0;
+    let isPageActive = true;
+
+    function deactivatePage() {
+        isPageActive = false;
+    }
+
+    window.addEventListener("pagehide", deactivatePage);
+    window.addEventListener("beforeunload", deactivatePage);
 
     function showElement(element) {
         if (element) {
@@ -54,21 +63,15 @@
             params.set("driveStatus", currentDriveStatus);
         }
 
-        const response = await fetch(STATISTICS_API + "?" + params.toString(), {
-            method: "GET",
+        const payload = await window.apiClient.get(STATISTICS_API + "?" + params.toString(), {
+            timeout: 20000,
+            retries: 3,
+            retryDelay: 1200,
             signal,
             headers: {
                 Accept: "application/json"
             }
         });
-
-        const payload = await response.json().catch(function () {
-            return null;
-        });
-
-        if (!response.ok) {
-            throw new Error(payload && payload.message ? payload.message : "Unable to load placement statistics. Please try again.");
-        }
 
         if (!payload || !Array.isArray(payload.content)) {
             throw new Error("Invalid placement statistics response received.");
@@ -78,20 +81,14 @@
     }
 
     async function fetchFilterOptions() {
-        const response = await fetch(FILTER_OPTIONS_API, {
-            method: "GET",
+        const payload = await window.apiClient.get(FILTER_OPTIONS_API, {
+            timeout: 20000,
+            retries: 2,
+            retryDelay: 1000,
             headers: {
                 Accept: "application/json"
             }
         });
-
-        const payload = await response.json().catch(function () {
-            return null;
-        });
-
-        if (!response.ok) {
-            throw new Error(payload && payload.message ? payload.message : "Unable to load placement statistics filters.");
-        }
 
         return payload || { hiringYears: [] };
     }
@@ -400,6 +397,7 @@
         options = options || {};
         const safePage = Math.max(0, Number(page) || 0);
         const initialLoad = Boolean(options.initialLoad);
+        const requestId = ++loadRequestToken;
 
         if (isStatisticsLoading && !options.force) {
             return;
@@ -407,6 +405,9 @@
 
         const cachedPage = getCachedPage(safePage);
         if (cachedPage) {
+            if (!isPageActive || requestId !== loadRequestToken) {
+                return;
+            }
             setListLoading(false, initialLoad);
             applyPagePayload(cachedPage);
             return;
@@ -423,6 +424,9 @@
 
         try {
             const payload = await fetchStatistics(safePage, activeStatisticsRequest.signal);
+            if (!isPageActive || requestId !== loadRequestToken) {
+                return;
+            }
             storePageInCache(safePage, payload);
             applyPagePayload(payload);
 
@@ -431,6 +435,9 @@
                 return;
             }
         } catch (error) {
+            if (!isPageActive || requestId !== loadRequestToken) {
+                return;
+            }
             if (error && error.name === "AbortError") {
                 return;
             }
@@ -441,10 +448,12 @@
             updatePaginationControls();
             showError("Unable to load placement statistics. Please try again.");
         } finally {
-            isStatisticsLoading = false;
-            activeStatisticsRequest = null;
-            updatePaginationControls();
-            setListLoading(false, initialLoad);
+            if (requestId === loadRequestToken) {
+                isStatisticsLoading = false;
+                activeStatisticsRequest = null;
+                updatePaginationControls();
+                setListLoading(false, initialLoad);
+            }
         }
     }
 
