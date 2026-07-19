@@ -1,8 +1,9 @@
 (function () {
-    var AI_ENDPOINT = "/api/ai/chat";
-    var FALLBACK_ERROR = "AI is taking longer than expected. Please try again.";
+    var AI_ENDPOINT = "/api/student/ai-chat";
+    var FALLBACK_ERROR = "Sorry, the placement assistant is temporarily unavailable. Please try again.";
     var THINKING_TEXT = "IARE AI is thinking...";
-    var REQUEST_TIMEOUT_MS = 180000;
+    var REQUEST_TIMEOUT_MS = 30000;
+    var isSubmitting = false;
 
     function ensureStudentAuth() {
         var authState = window.PlacementPortalAuth ? window.PlacementPortalAuth.getAuthState() : null;
@@ -80,6 +81,9 @@
     }
 
     async function requestAiAnswer(userMessage) {
+        var authState = window.PlacementPortalAuth ? window.PlacementPortalAuth.getAuthState() : null;
+        var studentId = authState && authState.studentId ? String(authState.studentId) : "";
+
         var controller = new AbortController();
         var timeoutId = window.setTimeout(function () {
             controller.abort();
@@ -88,7 +92,11 @@
         try {
             var response = await fetch(AI_ENDPOINT, {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-Student-Id": studentId
+                },
+                credentials: "same-origin",
                 body: JSON.stringify({ message: userMessage }),
                 signal: controller.signal
             });
@@ -100,7 +108,10 @@
             }
 
             var data = await response.json();
-            var aiText = data.answer || "AI did not return an answer.";
+            var aiText = data.reply || data.answer || "";
+            if (!String(aiText || "").trim()) {
+                throw new Error(FALLBACK_ERROR);
+            }
             return String(aiText).trim();
         } finally {
             window.clearTimeout(timeoutId);
@@ -108,12 +119,17 @@
     }
 
     async function sendMessage(messageText) {
+        if (isSubmitting) {
+            return;
+        }
+
         var chatInput = document.getElementById("chatInput");
         var trimmedMessage = String(messageText || "").trim();
         if (!trimmedMessage) {
             return;
         }
 
+        isSubmitting = true;
         appendMessage("user", trimmedMessage);
         chatInput.value = "";
         resizeTextarea(chatInput);
@@ -131,6 +147,7 @@
             console.error("Student AI chatbot request failed:", error);
         } finally {
             setBusyState(false);
+            isSubmitting = false;
             chatInput.focus();
         }
     }

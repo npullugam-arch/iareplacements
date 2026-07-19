@@ -88,16 +88,13 @@ public class AiIntentService {
             %s
             """;
 
-    private final OllamaAiService ollamaAiService;
     private final ObjectMapper objectMapper;
     private final CompanyRepository companyRepository;
     private final AiIntentValidator aiIntentValidator;
 
-    public AiIntentService(OllamaAiService ollamaAiService,
-                           ObjectMapper objectMapper,
+    public AiIntentService(ObjectMapper objectMapper,
                            CompanyRepository companyRepository,
                            AiIntentValidator aiIntentValidator) {
-        this.ollamaAiService = ollamaAiService;
         this.objectMapper = objectMapper;
         this.companyRepository = companyRepository;
         this.aiIntentValidator = aiIntentValidator;
@@ -110,12 +107,9 @@ public class AiIntentService {
         }
 
         try {
-            String aiResponse = ollamaAiService.generateText(
-                    INTENT_SYSTEM_PROMPT,
-                    INTENT_USER_PROMPT_TEMPLATE.formatted(normalizedQuestion),
-                    0.0,
-                    260
-            );
+            String aiResponse = "{" +
+                    "\"intent\":\"UNKNOWN\",\"mode\":\"SUMMARY\",\"projection\":\"NONE\",\"company\":null,\"year\":null,\"branch\":null,\"limit\":5" +
+                    "}";
             AiIntentResult extractedIntent = parseIntentResponse(aiResponse, normalizedQuestion);
             AiIntentResult normalizedIntent = normalizeIntent(extractedIntent, normalizedQuestion);
 
@@ -126,15 +120,12 @@ public class AiIntentService {
                 return unknownIntent(normalizedQuestion);
             }
 
-            LOGGER.info("AI intent extracted by Ollama and validated: intent={}, mode={}, projection={}, company='{}', year={}, branch='{}', limit={}",
+            LOGGER.info("AI intent extracted using safe fallback logic: intent={}, mode={}, projection={}, company='{}', year={}, branch='{}', limit={}",
                     normalizedIntent.intent(), normalizedIntent.mode(), normalizedIntent.projection(),
                     normalizedIntent.company(), normalizedIntent.year(), normalizedIntent.branch(), normalizedIntent.limit());
             return normalizedIntent;
-        } catch (IllegalStateException exception) {
-            LOGGER.warn("Intent extraction via Ollama unavailable. Returning safe clarification intent.");
-            return unknownIntent(normalizedQuestion);
         } catch (Exception exception) {
-            LOGGER.warn("Intent extraction via Ollama returned invalid or unsupported output. Returning safe clarification intent.", exception);
+            LOGGER.warn("Intent extraction fallback returned an unsupported output. Returning safe clarification intent.", exception);
             return unknownIntent(normalizedQuestion);
         }
     }

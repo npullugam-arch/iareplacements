@@ -9,10 +9,10 @@ import org.springframework.web.client.RestTemplate;
 public class AiConfig {
 
     @Bean
-    public RestTemplate ollamaRestTemplate() {
+    public RestTemplate n8nRestTemplate() {
         SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
-        requestFactory.setConnectTimeout(10_000);
-        requestFactory.setReadTimeout(180_000);
+        requestFactory.setConnectTimeout(5_000);
+        requestFactory.setReadTimeout(30_000);
         return new RestTemplate(requestFactory);
     }
 }

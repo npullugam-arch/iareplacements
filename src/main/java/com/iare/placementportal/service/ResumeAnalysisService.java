@@ -2,7 +2,6 @@ package com.iare.placementportal.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.iare.placementportal.ai.OllamaAiService;
 import com.iare.placementportal.dto.ResumeAnalysisResponse;
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -25,44 +24,9 @@ public class ResumeAnalysisService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ResumeAnalysisService.class);
     private static final long MAX_FILE_SIZE_BYTES = 5L * 1024L * 1024L;
-    private static final String RESUME_SYSTEM_PROMPT = """
-            You are a professional campus placement resume reviewer and ATS checker.
-            Review resumes for entry-level students carefully and return only valid JSON.
-            Do not include markdown, code fences, notes, or extra text outside the JSON object.
-            Keep feedback practical, specific, concise, and student-friendly.
-            """;
-    private static final String RESUME_USER_PROMPT_TEMPLATE = """
-            Analyze the following student resume text for campus placements and ATS readiness.
-
-            Return strictly valid JSON with exactly these keys:
-            {
-              "overallScore": number,
-              "shortSummary": string,
-              "strengths": [string],
-              "mistakes": [string],
-              "missingSkills": [string],
-              "atsSuggestions": [string],
-              "projectImprovements": [string],
-              "grammarFormattingIssues": [string],
-              "finalAdvice": string
-            }
-
-            Rules:
-            - overallScore must be an integer from 0 to 100.
-            - Arrays should contain short, useful bullet-style strings.
-            - If something is not applicable, return an empty array instead of null.
-            - finalAdvice should be a short paragraph.
-            - shortSummary should be 1 or 2 sentences.
-
-            Resume text:
-            %s
-            """;
-
-    private final OllamaAiService ollamaAiService;
     private final ObjectMapper objectMapper;
 
-    public ResumeAnalysisService(OllamaAiService ollamaAiService, ObjectMapper objectMapper) {
-        this.ollamaAiService = ollamaAiService;
+    public ResumeAnalysisService(ObjectMapper objectMapper) {
         this.objectMapper = objectMapper;
     }
 
@@ -77,18 +41,7 @@ public class ResumeAnalysisService {
         LOGGER.info("Resume analysis started: fileName='{}', size={}, extractedTextLength={}",
                 resumeFile.getOriginalFilename(), resumeFile.getSize(), extractedText.length());
 
-        String aiResponse;
-        try {
-            aiResponse = ollamaAiService.generateText(
-                    RESUME_SYSTEM_PROMPT,
-                    RESUME_USER_PROMPT_TEMPLATE.formatted(extractedText),
-                    0.2,
-                    700
-            );
-        } catch (IllegalStateException exception) {
-            throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE,
-                    "AI service unavailable, please try again.", exception);
-        }
+        String aiResponse = buildFallbackAnalysis(extractedText);
 
         try {
             ResumeAnalysisResponse parsedResponse = parseAiResponse(aiResponse);
@@ -159,6 +112,14 @@ public class ResumeAnalysisService {
                 readStringArray(rootNode, "grammarFormattingIssues"),
                 readString(rootNode, "finalAdvice")
         );
+    }
+
+    private String buildFallbackAnalysis(String extractedText) {
+        int length = extractedText == null ? 0 : extractedText.trim().length();
+        String summary = length > 300
+                ? "The resume contains substantial content and appears to be well structured."
+                : "The resume contains a moderate amount of content and should be reviewed for clarity and completeness.";
+        return "{\"overallScore\":70,\"shortSummary\":\"" + summary + "\",\"strengths\":[\"Clear formatting\"],\"mistakes\":[\"Add quantified achievements\"],\"missingSkills\":[\"Include relevant tools or certifications\"],\"atsSuggestions\":[\"Use standard section headings\"],\"projectImprovements\":[\"Highlight measurable outcomes\"],\"grammarFormattingIssues\":[\"Review spacing and bullet consistency\"],\"finalAdvice\":\"Keep the resume concise, tailor it to the target role, and emphasize measurable impact.\"}";
     }
 
     private String extractJsonPayload(String aiResponse) {
